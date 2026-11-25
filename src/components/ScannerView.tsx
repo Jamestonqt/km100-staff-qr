@@ -69,6 +69,18 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   const isProcessingScanRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Live refs to prevent stale closure when toggling Campus Entry / Exit while camera is running
+  const scanModeRef = useRef<ScanType>(scanType);
+  const gateLocationRef = useRef<GateStation>(gateLocation);
+
+  useEffect(() => {
+    scanModeRef.current = scanType;
+  }, [scanType]);
+
+  useEffect(() => {
+    gateLocationRef.current = gateLocation;
+  }, [gateLocation]);
+
   // Populate cameras
   useEffect(() => {
     Html5Qrcode.getCameras()
@@ -108,6 +120,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       isProcessingScanRef.current = true;
       setIsVerifying(true);
 
+      const currentScanType = scanModeRef.current;
+      const currentGateLocation = gateLocationRef.current;
+
       const parsed = parseQRPayload(rawCodeOrJson);
       const codeToVerify = parsed.code || 'UNKNOWN';
       const now = Date.now();
@@ -121,8 +136,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         setLastResult({
           status: 'DUPLICATE_SCAN',
           message: `ANTI-PASSBACK COOLDOWN: Badge ${codeToVerify} was scanned ${10 - remainingSec}s ago. Please wait ${remainingSec}s.`,
-          scanType,
-          gateLocation,
+          scanType: currentScanType,
+          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -143,16 +158,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           employee_code: codeToVerify,
           employee_name: 'Unknown / Unregistered',
           department: 'Unknown',
-          scan_type: scanType,
+          scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: gateLocation,
+          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: parsed.error || 'INVALID BADGE: Not a KM100 verified access credential.',
-          scanType,
-          gateLocation,
+          scanType: currentScanType,
+          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -176,16 +191,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           employee_code: codeToVerify,
           employee_name: 'Unknown / Unregistered',
           department: 'Unknown',
-          scan_type: scanType,
+          scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: gateLocation,
+          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: `UNREGISTERED STAFF: Code ${codeToVerify} not found in KM100 records.`,
-          scanType,
-          gateLocation,
+          scanType: currentScanType,
+          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -207,16 +222,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           employee_code: employee.employee_code,
           employee_name: employee.full_name,
           department: employee.department,
-          scan_type: scanType,
+          scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: gateLocation,
+          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: 'SECURITY HASH MISMATCH: Badge token is invalid or revoked.',
-          scanType,
-          gateLocation,
+          scanType: currentScanType,
+          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           employee,
           scannedCode: employee.employee_code,
@@ -239,16 +254,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           employee_code: employee.employee_code,
           employee_name: employee.full_name,
           department: employee.department,
-          scan_type: scanType,
+          scan_type: currentScanType,
           verification_status: 'INACTIVE_STAFF',
-          gate_location: gateLocation,
+          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INACTIVE_STAFF',
           message: `ACCESS DENIED: Staff account status is "${employee.status.toUpperCase()}". Access blocked.`,
-          scanType,
-          gateLocation,
+          scanType: currentScanType,
+          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           employee,
           scannedCode: employee.employee_code,
@@ -266,7 +281,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       cooldownRef.current.set(employee.employee_code, now);
       soundManager.playSuccessChime();
 
-      if (scanType === 'CHECK_IN') {
+      if (currentScanType === 'CHECK_IN') {
         confetti({
           particleCount: 40,
           spread: 60,
@@ -280,16 +295,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         employee_code: employee.employee_code,
         employee_name: employee.full_name,
         department: employee.department,
-        scan_type: scanType,
+        scan_type: currentScanType,
         verification_status: 'VALID',
-        gate_location: gateLocation,
+        gate_location: currentGateLocation,
       });
 
       setLastResult({
         status: 'VALID',
-        message: `ACCESS GRANTED: ${employee.full_name} (${scanType.replace('_', ' ')})`,
-        scanType,
-        gateLocation,
+        message: `ACCESS GRANTED: ${employee.full_name} (${currentScanType.replace('_', ' ')})`,
+        scanType: currentScanType,
+        gateLocation: currentGateLocation,
         timestamp: new Date().toLocaleTimeString(),
         employee,
         scannedCode: employee.employee_code,
@@ -301,8 +316,50 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         setIsVerifying(false);
       }, 1500);
     },
-    [gateLocation, onScanRecorded, scanType]
+    [onScanRecorded]
   );
+
+  // Keep a live ref to handleVerifyPayload to avoid stale callbacks
+  const handleVerifyPayloadRef = useRef(handleVerifyPayload);
+  useEffect(() => {
+    handleVerifyPayloadRef.current = handleVerifyPayload;
+  }, [handleVerifyPayload]);
+
+  // Hardware barcode/QR scanner listener (USB HID keyboard emulation)
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when user is typing into an input field or textarea
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      const now = Date.now();
+      // Hardware scanners type at very high speed (<100ms per character)
+      if (now - lastKeyTime > 120) {
+        buffer = '';
+      }
+      lastKeyTime = now;
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 2) {
+          const code = buffer.trim();
+          buffer = '';
+          handleVerifyPayloadRef.current(code);
+        }
+      } else if (e.key.length === 1) {
+        buffer += e.key;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Safely stop scanner
   const stopScanner = async () => {
@@ -369,7 +426,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           cameraConfig,
           config,
           (decodedText) => {
-            handleVerifyPayload(decodedText);
+            handleVerifyPayloadRef.current(decodedText);
           },
           () => {
             // Frame scanned without QR code - ignore
@@ -474,7 +531,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       }
 
       const decodedText = await scanner.scanFile(file, true);
-      handleVerifyPayload(decodedText);
+      handleVerifyPayloadRef.current(decodedText);
 
       if (shouldClean) {
         scanner.clear();
@@ -485,8 +542,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       setLastResult({
         status: 'INVALID_QR',
         message: 'No valid KM100 QR code detected in the uploaded image. Please ensure the QR is clear and well-lit.',
-        scanType,
-        gateLocation,
+        scanType: scanModeRef.current,
+        gateLocation: gateLocationRef.current,
         timestamp: new Date().toLocaleTimeString(),
         scannedCode: 'FILE_UPLOAD',
       });
@@ -515,7 +572,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualCode.trim()) return;
-    handleVerifyPayload(manualCode.trim());
+    handleVerifyPayloadRef.current(manualCode.trim());
     setManualCode('');
   };
 
