@@ -212,6 +212,7 @@ class LocalDataStore {
   public async recordScanLog(log: Omit<ScanLog, 'id' | 'scanned_at'>): Promise<ScanLog> {
     const logs = this.getScanLogsRaw();
     const newLog: ScanLog = {
+      gate_location: log.gate_location || 'Main Entrance',
       ...log,
       id: 'log-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6),
       scanned_at: new Date().toISOString(),
@@ -320,21 +321,25 @@ export const portalService = {
   },
 
   async recordScanLog(log: Omit<ScanLog, 'id' | 'scanned_at'>): Promise<ScanLog> {
+    const payload = {
+      gate_location: log.gate_location || 'Main Entrance',
+      ...log,
+    };
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: inserted, error } = await supabase
           .from('scan_logs')
-          .insert([log])
+          .insert([payload])
           .select()
           .single();
         if (error) throw error;
         return inserted as ScanLog;
       } catch (err) {
         console.warn('Supabase insert log failed, recording locally:', err);
-        return localStore.recordScanLog(log);
+        return localStore.recordScanLog(payload);
       }
     }
-    return localStore.recordScanLog(log);
+    return localStore.recordScanLog(payload);
   },
 
   async findEmployeeByCode(code: string): Promise<Employee | null> {

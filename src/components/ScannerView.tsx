@@ -9,7 +9,6 @@ import {
   ShieldAlert,
   LogIn,
   LogOut,
-  MapPin,
   Clock,
   Sparkles,
   AlertTriangle,
@@ -19,12 +18,10 @@ import {
 } from 'lucide-react';
 import type {
   Employee,
-  GateStation,
   ScanLog,
   ScanType,
   VerificationStatus,
 } from '../types/database';
-import { GATE_STATIONS } from '../types/database';
 import { portalService } from '../lib/supabase';
 import { parseQRPayload, getInitials } from '../utils/qr';
 import { soundManager } from '../utils/audio';
@@ -38,16 +35,14 @@ interface VerificationResult {
   status: VerificationStatus;
   message: string;
   scanType: ScanType;
-  gateLocation: string;
   timestamp: string;
   employee?: Employee | null;
   scannedCode: string;
 }
 
 export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recentLogs }) => {
-  // Gate Controls
+  // Scanner Controls
   const [scanType, setScanType] = useState<ScanType>('CHECK_IN');
-  const [gateLocation, setGateLocation] = useState<GateStation>('Main Campus Gate');
 
   // Camera State
   const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);
@@ -69,17 +64,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   const isProcessingScanRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Live refs to prevent stale closure when toggling Campus Entry / Exit while camera is running
+  // Live ref to prevent stale closure when toggling Campus Entry / Exit while camera is running
   const scanModeRef = useRef<ScanType>(scanType);
-  const gateLocationRef = useRef<GateStation>(gateLocation);
 
   useEffect(() => {
     scanModeRef.current = scanType;
   }, [scanType]);
-
-  useEffect(() => {
-    gateLocationRef.current = gateLocation;
-  }, [gateLocation]);
 
   // Populate cameras
   useEffect(() => {
@@ -121,7 +111,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       setIsVerifying(true);
 
       const currentScanType = scanModeRef.current;
-      const currentGateLocation = gateLocationRef.current;
 
       const parsed = parseQRPayload(rawCodeOrJson);
       const codeToVerify = parsed.code || 'UNKNOWN';
@@ -137,7 +126,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           status: 'DUPLICATE_SCAN',
           message: `ANTI-PASSBACK COOLDOWN: Badge ${codeToVerify} was scanned ${10 - remainingSec}s ago. Please wait ${remainingSec}s.`,
           scanType: currentScanType,
-          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -160,14 +148,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           department: 'Unknown',
           scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: parsed.error || 'INVALID BADGE: Not a KM100 verified access credential.',
           scanType: currentScanType,
-          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -193,14 +179,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           department: 'Unknown',
           scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: `UNREGISTERED STAFF: Code ${codeToVerify} not found in KM100 records.`,
           scanType: currentScanType,
-          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           scannedCode: codeToVerify,
         });
@@ -224,14 +208,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           department: employee.department,
           scan_type: currentScanType,
           verification_status: 'INVALID_QR',
-          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INVALID_QR',
           message: 'SECURITY HASH MISMATCH: Badge token is invalid or revoked.',
           scanType: currentScanType,
-          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           employee,
           scannedCode: employee.employee_code,
@@ -256,14 +238,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           department: employee.department,
           scan_type: currentScanType,
           verification_status: 'INACTIVE_STAFF',
-          gate_location: currentGateLocation,
         });
 
         setLastResult({
           status: 'INACTIVE_STAFF',
           message: `ACCESS DENIED: Staff account status is "${employee.status.toUpperCase()}". Access blocked.`,
           scanType: currentScanType,
-          gateLocation: currentGateLocation,
           timestamp: new Date().toLocaleTimeString(),
           employee,
           scannedCode: employee.employee_code,
@@ -297,14 +277,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         department: employee.department,
         scan_type: currentScanType,
         verification_status: 'VALID',
-        gate_location: currentGateLocation,
       });
 
       setLastResult({
         status: 'VALID',
         message: `ACCESS GRANTED: ${employee.full_name} (${currentScanType.replace('_', ' ')})`,
         scanType: currentScanType,
-        gateLocation: currentGateLocation,
         timestamp: new Date().toLocaleTimeString(),
         employee,
         scannedCode: employee.employee_code,
@@ -543,7 +521,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         status: 'INVALID_QR',
         message: 'No valid KM100 QR code detected in the uploaded image. Please ensure the QR is clear and well-lit.',
         scanType: scanModeRef.current,
-        gateLocation: gateLocationRef.current,
         timestamp: new Date().toLocaleTimeString(),
         scannedCode: 'FILE_UPLOAD',
       });
@@ -578,13 +555,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
   return (
     <div className="space-y-6">
-      {/* Top Gate Controls */}
+        {/* Top Scanner Controls */}
       <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Check-In / Check-Out Segmented Switch */}
         <div className="flex items-center w-full md:w-auto bg-slate-100 dark:bg-[#0d0f12] p-1.5 rounded-xl border border-slate-200 dark:border-[#222730] transition-colors">
           <button
             onClick={() => setScanType('CHECK_IN')}
-            aria-label="Set gate mode to CHECK-IN"
+            aria-label="Set scan mode to CHECK-IN"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
               scanType === 'CHECK_IN'
                 ? 'bg-orange-600 text-white shadow-sm'
@@ -597,7 +574,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
           <button
             onClick={() => setScanType('CHECK_OUT')}
-            aria-label="Set gate mode to CHECK-OUT"
+            aria-label="Set scan mode to CHECK-OUT"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 cursor-pointer ${
               scanType === 'CHECK_OUT'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -609,24 +586,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           </button>
         </div>
 
-        {/* Gate Station & Camera Selectors */}
+        {/* Camera Selectors */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Gate Station Dropdown */}
-          <div className="flex items-center space-x-2 bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
-            <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
-            <select
-              value={gateLocation}
-              onChange={(e) => setGateLocation(e.target.value as GateStation)}
-              aria-label="Select Gate Station"
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer"
-            >
-              {GATE_STATIONS.map((station) => (
-                <option key={station} value={station} className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
-                  {station}
-                </option>
-              ))}
-            </select>
-          </div>
 
           {/* Camera Device Dropdown (if multiple) */}
           {cameras.length > 1 && (
@@ -711,7 +672,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                   }`}
                 />
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Optical Scanner • {gateLocation}
+                  Optical Scanner • Main Entrance
                 </h3>
               </div>
 
@@ -912,7 +873,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#222730]">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Gate Verification Status
+                Access Verification Status
               </span>
               {lastResult && (
                 <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center">
@@ -987,9 +948,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                         <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-[#16191e] border border-slate-200 dark:border-[#222730] text-slate-700 dark:text-slate-300">
                           {lastResult.employee.department}
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-[#16191e] border border-slate-200 dark:border-[#222730] text-slate-500 dark:text-slate-400">
-                          {lastResult.gateLocation}
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -1002,7 +960,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             ) : (
               <div className="py-12 text-center text-slate-400 dark:text-slate-500">
                 <Sparkles className="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-400">Gate scanner is ready.</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-400">Scanner is ready.</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">
                   Scan badge QR code via camera or manual search.
                 </p>
@@ -1038,7 +996,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                           {log.employee_name}
                         </div>
                         <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                          {log.employee_code} • {log.gate_location}
+                          {log.employee_code}
                         </div>
                       </div>
                     </div>

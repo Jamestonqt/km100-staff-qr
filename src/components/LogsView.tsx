@@ -7,7 +7,6 @@ import {
   XCircle,
   LogIn,
   LogOut,
-  MapPin,
   Calendar,
 } from 'lucide-react';
 import type { ScanLog } from '../types/database';
@@ -32,8 +31,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
       // Search
       const matchSearch =
         log.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.employee_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.gate_location.toLowerCase().includes(searchTerm.toLowerCase());
+        log.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Type
       const matchType = scanTypeFilter === 'ALL' || log.scan_type === scanTypeFilter;
@@ -72,7 +70,6 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
       'Employee Code',
       'Full Name',
       'Department',
-      'Gate Location',
       'Scan Type',
       'Verification Status',
     ];
@@ -83,7 +80,6 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
       `"${l.employee_code}"`,
       `"${l.employee_name.replace(/"/g, '""')}"`,
       `"${l.department || 'N/A'}"`,
-      `"${l.gate_location}"`,
       `"${l.scan_type}"`,
       `"${l.verification_status}"`,
     ]);
@@ -111,8 +107,8 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search logs by staff name, code, gate..."
-            aria-label="Search logs by staff name, employee code, or gate"
+            placeholder="Search logs by staff name or code..."
+            aria-label="Search logs by staff name or employee code"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#2a303c] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
@@ -201,7 +197,6 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                 <th className="py-3.5 px-4">Timestamp</th>
                 <th className="py-3.5 px-4">Staff Member</th>
                 <th className="py-3.5 px-4">Department</th>
-                <th className="py-3.5 px-4">Gate Location</th>
                 <th className="py-3.5 px-4 text-center">Type</th>
                 <th className="py-3.5 px-4 text-right">Verification</th>
               </tr>
@@ -235,12 +230,6 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                     {/* Department */}
                     <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
                       {log.department || 'N/A'}
-                    </td>
-
-                    {/* Gate */}
-                    <td className="py-3 px-4 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                      <span>{log.gate_location}</span>
                     </td>
 
                     {/* Type */}
@@ -286,7 +275,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
 
               {filteredLogs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500">
+                  <td colSpan={5} className="py-12 text-center text-slate-500">
                     No scan logs found matching your filters.
                   </td>
                 </tr>

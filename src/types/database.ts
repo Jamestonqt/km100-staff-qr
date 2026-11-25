@@ -29,7 +29,7 @@ export interface ScanLog {
   department?: string | null;
   scan_type: ScanType;
   verification_status: VerificationStatus;
-  gate_location: string;
+  gate_location?: string;
   scanned_at: string;
 }
 
