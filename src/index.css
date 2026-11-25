@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+body {
+  background-color: #0d0f12;
+  color: #ffffff;
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: #ea580c;
+  color: #ffffff;
+}
+
+/* Custom CR80 Badge Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  #printable-badge-area,
+  #printable-badge-area * {
+    visibility: visible;
+  }
+
+  #printable-badge-area {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 3.375in !important;
+    height: 5.2in !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 0;
+  }
+}
