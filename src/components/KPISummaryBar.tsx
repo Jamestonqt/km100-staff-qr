@@ -1,13 +1,12 @@
 import React from 'react';
 import { Users, Building2, LogIn, ShieldAlert } from 'lucide-react';
-import type { KPISummary } from '../types/database';
 
 interface KPISummaryBarProps {
-  summary: KPISummary;
-  loading?: boolean;
+  activePersonnel: number;
+  currentlyOnSite: number;
 }
 
-export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading = false }) => {
+export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ activePersonnel, currentlyOnSite }) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
       {/* Total Active Personnel */}
@@ -18,7 +17,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
               Active Personnel
             </p>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              {loading ? '-' : summary.totalActiveStaff}
+              {activePersonnel}
             </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-600 dark:text-orange-400">
@@ -38,7 +37,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
               Currently On-Site
             </p>
             <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-              {loading ? '-' : summary.currentlyOnSite}
+              {currentlyOnSite}
             </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
@@ -58,9 +57,6 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Admissions Today
             </p>
-            <h3 className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">
-              {loading ? '-' : summary.todayCheckIns}
-            </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
             <LogIn className="w-5 h-5" />
@@ -78,9 +74,6 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Denied / Flagged
             </p>
-            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
-              {loading ? '-' : summary.deniedToday}
-            </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
             <ShieldAlert className="w-5 h-5" />

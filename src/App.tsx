@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Navbar, type ActiveTab } from './components/Navbar';
 import { KPISummaryBar } from './components/KPISummaryBar';
 import { ScannerView } from './components/ScannerView';
@@ -6,25 +6,24 @@ import { GeneratorView } from './components/GeneratorView';
 import { DirectoryView } from './components/DirectoryView';
 import { LogsView } from './components/LogsView';
 import { SetupModal } from './components/SetupModal';
-import type { Employee, KPISummary, ScanLog } from './types/database';
+import type { Employee, ScanLog } from './types/database';
 import { portalService, isSupabaseConfigured } from './lib/supabase';
 import { soundManager } from './utils/audio';
 import { getInitialTheme, applyTheme, type Theme } from './utils/theme';
+import { getCurrentlyOnSiteCount } from './utils/presence';
 
 export function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [activeTab, setActiveTab] = useState<ActiveTab>('scanner');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [logs, setLogs] = useState<ScanLog[]>([]);
-  const [kpiSummary, setKpiSummary] = useState<KPISummary>({
-    totalActiveStaff: 0,
-    currentlyOnSite: 0,
-    todayCheckIns: 0,
-    deniedToday: 0,
-  });
-  const [loading, setLoading] = useState<boolean>(true);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(soundManager.getMuted());
+
+  const currentlyOnSite = useMemo(
+    () => getCurrentlyOnSiteCount(logs, employees),
+    [logs, employees]
+  );
 
   // Apply theme class to <html> on theme state changes
   useEffect(() => {
@@ -38,18 +37,14 @@ export function App() {
   // Load all data
   const loadData = useCallback(async () => {
     try {
-      const [empList, logList, kpis] = await Promise.all([
+      const [empList, logList] = await Promise.all([
         portalService.getEmployees(),
         portalService.getScanLogs(),
-        portalService.getKPISummary(),
       ]);
       setEmployees(empList);
       setLogs(logList);
-      setKpiSummary(kpis);
     } catch (err) {
       console.error('Failed to load portal data:', err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -102,7 +97,10 @@ export function App() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Real-time KPI Metric Cards */}
-        <KPISummaryBar summary={kpiSummary} loading={loading} />
+        <KPISummaryBar
+          activePersonnel={employees.filter((e) => e.status === 'Active').length}
+          currentlyOnSite={currentlyOnSite}
+        />
 
         {/* Tab Views */}
         {activeTab === 'scanner' && (

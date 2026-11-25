@@ -21,6 +21,7 @@ import { DEPARTMENTS, SHIFT_SCHEDULES } from '../types/database';
 import { portalService } from '../lib/supabase';
 import { BadgeCard } from './BadgeCard';
 import { getInitials } from '../utils/qr';
+import { getOnSiteEmployeeCodes } from '../utils/presence';
 
 interface DirectoryViewProps {
   employees: Employee[];
@@ -46,24 +47,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
   // Derive on-site status from the most recent valid scan per employee:
   // CHECK_IN => On-Site, CHECK_OUT => Off-Site
-  const onSiteEmployeeCodes = useMemo(() => {
-    const latestValidMap = new Map<string, ScanLog>();
-    for (const log of logs) {
-      if (log.verification_status !== 'VALID') continue;
-      const code = log.employee_code.toUpperCase();
-      const existing = latestValidMap.get(code);
-      if (!existing || new Date(log.scanned_at).getTime() > new Date(existing.scanned_at).getTime()) {
-        latestValidMap.set(code, log);
-      }
-    }
-    const onSiteSet = new Set<string>();
-    for (const [code, log] of latestValidMap.entries()) {
-      if (log.scan_type === 'CHECK_IN') {
-        onSiteSet.add(code);
-      }
-    }
-    return onSiteSet;
-  }, [logs]);
+  const onSiteEmployeeCodes = useMemo(() => getOnSiteEmployeeCodes(logs), [logs]);
 
   // Filtered employees
   const filteredEmployees = useMemo(() => {
