@@ -77,6 +77,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     status,
     photo_url: photoUrl || null,
     qr_token: generateQRToken(employeeCode || 'KM100-XXX'),
+    is_on_site: false,
     created_at: new Date().toISOString(),
   };
 
@@ -101,6 +102,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
         status,
         photo_url: photoUrl.trim() || null,
         qr_token: qrToken,
+        is_on_site: false,
       });
 
       onEmployeeCreated(created);
@@ -113,7 +115,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       setFullName('');
     } catch (err) {
       console.error('Failed to create staff:', err);
-      alert('Error creating staff badge. Please try again.');
+      const errRecord = err as { message?: unknown };
+      const message = err instanceof Error
+        ? err.message
+        : errRecord?.message
+        ? String(errRecord.message)
+        : 'Please try again.';
+      alert(`Error creating staff badge: ${message}`);
     } finally {
       setIsSaving(false);
     }

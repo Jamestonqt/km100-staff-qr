@@ -38,8 +38,11 @@ CREATE TABLE IF NOT EXISTS employees (
     status TEXT NOT NULL DEFAULT 'Active',
     photo_url TEXT,
     qr_token TEXT NOT NULL UNIQUE,
+    is_on_site BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS is_on_site BOOLEAN NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS scan_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

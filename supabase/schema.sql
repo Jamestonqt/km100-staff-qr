@@ -20,8 +20,12 @@ CREATE TABLE IF NOT EXISTS employees (
     status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'On Leave', 'Inactive')),
     photo_url TEXT,
     qr_token TEXT NOT NULL UNIQUE,
+    is_on_site BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Ensure existing deployments gain the presence flag
+ALTER TABLE employees ADD COLUMN IF NOT EXISTS is_on_site BOOLEAN NOT NULL DEFAULT false;
 
 -- Index for quick QR verification lookups
 CREATE INDEX IF NOT EXISTS idx_employees_code ON employees(employee_code);
@@ -48,6 +52,21 @@ CREATE INDEX IF NOT EXISTS idx_scan_logs_employee_id ON scan_logs(employee_id);
 CREATE INDEX IF NOT EXISTS idx_scan_logs_scanned_at ON scan_logs(scanned_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scan_logs_verification ON scan_logs(verification_status);
 CREATE INDEX IF NOT EXISTS idx_scan_logs_type ON scan_logs(scan_type);
+
+-- -------------------------------------------------------------------------
+-- 2b. REALTIME REPLICATION (live activity feed + on-site KPI)
+-- -------------------------------------------------------------------------
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE employees;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE scan_logs;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- -------------------------------------------------------------------------
 -- 3. ROW LEVEL SECURITY (RLS)

@@ -27,18 +27,20 @@ import { parseQRPayload, getInitials } from '../utils/qr';
 import { soundManager } from '../utils/audio';
 
 interface ScannerViewProps {
-  onScanRecorded: () => void;
+  onScanRecorded: (log?: ScanLog) => void;
   recentLogs: ScanLog[];
 }
 
 interface VerificationResult {
-  status: VerificationStatus;
+  status: ScanResultStatus;
   message: string;
   scanType: ScanType;
   timestamp: string;
   employee?: Employee | null;
   scannedCode: string;
 }
+
+type ScanResultStatus = VerificationStatus | 'ALREADY_ON_SITE' | 'NOT_ON_SITE';
 
 export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recentLogs }) => {
   // Scanner Controls
@@ -64,12 +66,17 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   const isProcessingScanRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Live ref to prevent stale closure when toggling Campus Entry / Exit while camera is running
+  // Live ref to prevent stale closure when toggling TIME IN / TIME OUT while camera is running
   const scanModeRef = useRef<ScanType>(scanType);
 
   useEffect(() => {
     scanModeRef.current = scanType;
   }, [scanType]);
+
+  const handleScanTypeChange = (next: ScanType) => {
+    scanModeRef.current = next;
+    setScanType(next);
+  };
 
   // Populate cameras
   useEffect(() => {
@@ -141,7 +148,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       if (!parsed.validFormat) {
         soundManager.playDeniedBuzzer();
 
-        await portalService.recordScanLog({
+        const newLog = await portalService.recordScanLog({
           employee_id: null,
           employee_code: codeToVerify,
           employee_name: 'Unknown / Unregistered',
@@ -158,7 +165,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           scannedCode: codeToVerify,
         });
 
-        onScanRecorded();
+        onScanRecorded(newLog);
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
@@ -172,7 +179,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       if (!employee) {
         soundManager.playDeniedBuzzer();
 
-        await portalService.recordScanLog({
+        const newLog = await portalService.recordScanLog({
           employee_id: null,
           employee_code: codeToVerify,
           employee_name: 'Unknown / Unregistered',
@@ -189,7 +196,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           scannedCode: codeToVerify,
         });
 
-        onScanRecorded();
+        onScanRecorded(newLog);
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
@@ -201,7 +208,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       if (parsed.token && parsed.token !== employee.qr_token) {
         soundManager.playDeniedBuzzer();
 
-        await portalService.recordScanLog({
+        const newLog = await portalService.recordScanLog({
           employee_id: employee.id,
           employee_code: employee.employee_code,
           employee_name: employee.full_name,
@@ -219,7 +226,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           scannedCode: employee.employee_code,
         });
 
-        onScanRecorded();
+        onScanRecorded(newLog);
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
@@ -231,7 +238,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       if (employee.status !== 'Active') {
         soundManager.playDeniedBuzzer();
 
-        await portalService.recordScanLog({
+        const newLog = await portalService.recordScanLog({
           employee_id: employee.id,
           employee_code: employee.employee_code,
           employee_name: employee.full_name,
@@ -249,7 +256,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           scannedCode: employee.employee_code,
         });
 
-        onScanRecorded();
+        onScanRecorded(newLog);
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
@@ -257,7 +264,70 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         return;
       }
 
+      // Presence guard: prevent double counting when logging in twice or out twice
+      if (currentScanType === 'CHECK_IN' && employee.is_on_site === true) {
+        cooldownRef.current.set(employee.employee_code, now);
+        soundManager.playWarningBeep();
+
+        const newLog = await portalService.recordScanLog({
+          employee_id: employee.id,
+          employee_code: employee.employee_code,
+          employee_name: employee.full_name,
+          department: employee.department,
+          scan_type: currentScanType,
+          verification_status: 'VALID',
+        });
+
+        setLastResult({
+          status: 'ALREADY_ON_SITE',
+          message: `ALREADY TIMED IN: ${employee.full_name} is already on-site. The on-site count was not increased.`,
+          scanType: currentScanType,
+          timestamp: new Date().toLocaleTimeString(),
+          employee,
+          scannedCode: employee.employee_code,
+        });
+
+        onScanRecorded(newLog);
+        setTimeout(() => {
+          isProcessingScanRef.current = false;
+          setIsVerifying(false);
+        }, 1600);
+        return;
+      }
+
+      if (currentScanType === 'CHECK_OUT' && employee.is_on_site !== true) {
+        cooldownRef.current.set(employee.employee_code, now);
+        soundManager.playWarningBeep();
+
+        const newLog = await portalService.recordScanLog({
+          employee_id: employee.id,
+          employee_code: employee.employee_code,
+          employee_name: employee.full_name,
+          department: employee.department,
+          scan_type: currentScanType,
+          verification_status: 'VALID',
+        });
+
+        setLastResult({
+          status: 'NOT_ON_SITE',
+          message: `NOT ON-SITE: ${employee.full_name} is not currently on-site. The on-site count was not decreased.`,
+          scanType: currentScanType,
+          timestamp: new Date().toLocaleTimeString(),
+          employee,
+          scannedCode: employee.employee_code,
+        });
+
+        onScanRecorded(newLog);
+        setTimeout(() => {
+          isProcessingScanRef.current = false;
+          setIsVerifying(false);
+        }, 1600);
+        return;
+      }
+
       // VALID SCAN!
+      const nextOnSite = currentScanType === 'CHECK_IN';
+
       cooldownRef.current.set(employee.employee_code, now);
       soundManager.playSuccessChime();
 
@@ -270,7 +340,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         });
       }
 
-      await portalService.recordScanLog({
+      await portalService.setEmployeeOnSite(employee.id, nextOnSite);
+
+      const newLog = await portalService.recordScanLog({
         employee_id: employee.id,
         employee_code: employee.employee_code,
         employee_name: employee.full_name,
@@ -281,14 +353,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
       setLastResult({
         status: 'VALID',
-        message: `ACCESS GRANTED: ${employee.full_name} (${currentScanType.replace('_', ' ')})`,
+        message: `ACCESS GRANTED: ${employee.full_name} (${currentScanType === 'CHECK_IN' ? 'TIME IN' : 'TIME OUT'})`,
         scanType: currentScanType,
         timestamp: new Date().toLocaleTimeString(),
         employee,
         scannedCode: employee.employee_code,
       });
 
-      onScanRecorded();
+      onScanRecorded(newLog);
       setTimeout(() => {
         isProcessingScanRef.current = false;
         setIsVerifying(false);
@@ -557,11 +629,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
     <div className="space-y-6">
         {/* Top Scanner Controls */}
       <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Check-In / Check-Out Segmented Switch */}
+        {/* TIME IN / TIME OUT Segmented Switch */}
         <div className="flex items-center w-full md:w-auto bg-slate-100 dark:bg-[#0d0f12] p-1.5 rounded-xl border border-slate-200 dark:border-[#222730] transition-colors">
           <button
-            onClick={() => setScanType('CHECK_IN')}
-            aria-label="Set scan mode to CHECK-IN"
+            onClick={() => handleScanTypeChange('CHECK_IN')}
+            aria-label="Set scan mode to TIME IN"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
               scanType === 'CHECK_IN'
                 ? 'bg-orange-600 text-white shadow-sm'
@@ -569,12 +641,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogIn className="w-4 h-4" />
-            <span>CAMPUS ENTRY</span>
+            <span>TIME IN</span>
           </button>
 
           <button
-            onClick={() => setScanType('CHECK_OUT')}
-            aria-label="Set scan mode to CHECK-OUT"
+            onClick={() => handleScanTypeChange('CHECK_OUT')}
+            aria-label="Set scan mode to TIME OUT"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 cursor-pointer ${
               scanType === 'CHECK_OUT'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -582,7 +654,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogOut className="w-4 h-4" />
-            <span>CAMPUS EXIT</span>
+            <span>TIME OUT</span>
           </button>
         </div>
 
@@ -866,7 +938,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                 ? 'bg-white border-slate-200 dark:bg-[#16191e] dark:border-[#222730]'
                 : lastResult.status === 'VALID'
                 ? 'bg-white border-emerald-500 dark:bg-[#16191e] dark:border-emerald-500/80'
-                : lastResult.status === 'DUPLICATE_SCAN'
+                : lastResult.status === 'DUPLICATE_SCAN' ||
+                  lastResult.status === 'ALREADY_ON_SITE' ||
+                  lastResult.status === 'NOT_ON_SITE'
                 ? 'bg-white border-amber-500 dark:bg-[#16191e] dark:border-amber-500/80'
                 : 'bg-white border-rose-500 dark:bg-[#16191e] dark:border-rose-500/80'
             }`}
@@ -890,7 +964,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                   className={`p-4 rounded-xl flex items-center space-x-3 ${
                     lastResult.status === 'VALID'
                       ? 'bg-emerald-600 text-white'
-                      : lastResult.status === 'DUPLICATE_SCAN'
+                      : lastResult.status === 'DUPLICATE_SCAN' ||
+                        lastResult.status === 'ALREADY_ON_SITE' ||
+                        lastResult.status === 'NOT_ON_SITE'
                       ? 'bg-amber-600 text-white'
                       : 'bg-rose-600 text-white'
                   }`}
@@ -906,6 +982,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                         ? 'ACCESS GRANTED'
                         : lastResult.status === 'DUPLICATE_SCAN'
                         ? 'COOLDOWN ALERT'
+                        : lastResult.status === 'ALREADY_ON_SITE'
+                        ? 'ALREADY ON-SITE'
+                        : lastResult.status === 'NOT_ON_SITE'
+                        ? 'NOT ON-SITE'
                         : 'ACCESS DENIED'}
                     </h2>
                     <p className="text-xs font-semibold opacity-95 leading-tight mt-0.5">
@@ -1009,7 +1089,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                             : 'bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
                         }`}
                       >
-                        {log.scan_type === 'CHECK_IN' ? 'Entry' : 'Exit'}
+                        {log.scan_type === 'CHECK_IN' ? 'TIME IN' : 'TIME OUT'}
                       </span>
                       <div className="text-[9px] text-slate-500 font-mono mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {

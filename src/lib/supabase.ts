@@ -34,6 +34,7 @@ const SEED_EMPLOYEES: Employee[] = [
     status: 'Active',
     photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=256',
     qr_token: 'km100_sec_token_001_8a7d2b',
+    is_on_site: false,
     created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
   {
@@ -46,6 +47,7 @@ const SEED_EMPLOYEES: Employee[] = [
     status: 'Active',
     photo_url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256',
     qr_token: 'km100_sec_token_002_9f1c3e',
+    is_on_site: false,
     created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
   },
   {
@@ -58,6 +60,7 @@ const SEED_EMPLOYEES: Employee[] = [
     status: 'Active',
     photo_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=256',
     qr_token: 'km100_sec_token_003_4b8e1a',
+    is_on_site: false,
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
   },
   {
@@ -70,6 +73,7 @@ const SEED_EMPLOYEES: Employee[] = [
     status: 'On Leave',
     photo_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=256',
     qr_token: 'km100_sec_token_004_7c3a9d',
+    is_on_site: false,
     created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
   {
@@ -82,6 +86,7 @@ const SEED_EMPLOYEES: Employee[] = [
     status: 'Inactive',
     photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256',
     qr_token: 'km100_sec_token_005_3e5f2c',
+    is_on_site: false,
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
 ];
@@ -145,7 +150,15 @@ class LocalDataStore {
       return SEED_EMPLOYEES;
     }
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw) as Employee[];
+      const normalized = parsed.map((e) => ({
+        ...e,
+        is_on_site: e.is_on_site === true,
+      }));
+      if (normalized.some((e, i) => e.is_on_site !== parsed[i].is_on_site)) {
+        this.saveEmployees(normalized);
+      }
+      return normalized;
     } catch {
       return SEED_EMPLOYEES;
     }
@@ -180,6 +193,7 @@ class LocalDataStore {
     const list = this.getEmployeesRaw();
     const newEmp: Employee = {
       ...data,
+      is_on_site: data.is_on_site === true,
       id: 'emp-' + Math.random().toString(36).substring(2, 10),
       created_at: new Date().toISOString(),
     };
@@ -252,21 +266,56 @@ export const portalService = {
   },
 
   async createEmployee(data: Omit<Employee, 'id' | 'created_at'>): Promise<Employee> {
+    const payload = { ...data, is_on_site: data.is_on_site === true };
+
     if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: inserted, error } = await supabase
+      const client = supabase;
+
+      const insertEmployee = async (row: Record<string, unknown>) => {
+        const { data: inserted, error } = await client
           .from('employees')
-          .insert([data])
+          .insert([row])
           .select()
           .single();
         if (error) throw error;
         return inserted as Employee;
+      };
+
+      try {
+        const inserted = await insertEmployee(payload);
+        return { ...inserted, is_on_site: inserted.is_on_site === true };
       } catch (err) {
-        console.warn('Supabase insert failed, saving locally:', err);
-        return localStore.createEmployee(data);
+        const errRecord = err as { message?: unknown; details?: unknown; code?: unknown };
+        const message = [
+          err instanceof Error ? err.message : '',
+          errRecord?.message ? String(errRecord.message) : '',
+          errRecord?.details ? String(errRecord.details) : '',
+          errRecord?.code ? String(errRecord.code) : '',
+          String(err),
+        ].join(' ');
+        const missingPresenceColumn =
+          /is_on_site/i.test(message) ||
+          /schema cache/i.test(message) ||
+          /column .* does not exist/i.test(message);
+
+        if (missingPresenceColumn) {
+          try {
+            const legacyPayload: Partial<typeof payload> = { ...payload };
+            delete legacyPayload.is_on_site;
+            const inserted = await insertEmployee(legacyPayload as Record<string, unknown>);
+            return { ...inserted, is_on_site: false };
+          } catch (retryErr) {
+            console.error('Supabase employee insert retry failed:', retryErr);
+            throw retryErr;
+          }
+        }
+
+        console.error('Supabase employee insert failed:', err);
+        throw err;
       }
     }
-    return localStore.createEmployee(data);
+
+    return localStore.createEmployee(payload);
   },
 
   async updateEmployee(id: string, updates: Partial<Employee>): Promise<Employee> {
@@ -286,6 +335,29 @@ export const portalService = {
       }
     }
     return localStore.updateEmployee(id, updates);
+  },
+
+  async setEmployeeOnSite(id: string, isOnSite: boolean): Promise<boolean> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('employees')
+          .update({ is_on_site: isOnSite })
+          .eq('id', id);
+        if (error) throw error;
+        return true;
+      } catch (err) {
+        console.warn('Supabase presence update failed, trying local store:', err);
+      }
+    }
+
+    try {
+      await localStore.updateEmployee(id, { is_on_site: isOnSite });
+      return true;
+    } catch (err) {
+      console.warn('Presence update skipped (employee not found in local store):', err);
+      return false;
+    }
   },
 
   async deleteEmployee(id: string): Promise<boolean> {
@@ -371,20 +443,28 @@ export const portalService = {
       (l) => l.verification_status !== 'VALID' && l.verification_status !== 'DUPLICATE_SCAN'
     ).length;
 
+    const hasPresenceField = employees.some((e) => typeof e.is_on_site === 'boolean');
+
+    // Presence is derived from the latest valid scan per employee so the
+    // On-Site / Off-Site status always follows the actual time-in / time-out.
     const latestValidScanByCode = new Map<string, ScanLog>();
     for (const log of logs) {
-      if (log.verification_status === 'VALID') {
-        if (!latestValidScanByCode.has(log.employee_code)) {
-          latestValidScanByCode.set(log.employee_code, log);
-        }
+      if (log.verification_status !== 'VALID') continue;
+      const code = log.employee_code.toUpperCase();
+      const existing = latestValidScanByCode.get(code);
+      if (!existing || new Date(log.scanned_at).getTime() > new Date(existing.scanned_at).getTime()) {
+        latestValidScanByCode.set(code, log);
       }
     }
 
     let currentlyOnSite = 0;
     for (const log of latestValidScanByCode.values()) {
-      if (log.scan_type === 'CHECK_IN') {
-        currentlyOnSite++;
-      }
+      if (log.scan_type === 'CHECK_IN') currentlyOnSite++;
+    }
+
+    // Prefer the stored flag only when no scan history exists at all.
+    if (latestValidScanByCode.size === 0 && hasPresenceField) {
+      currentlyOnSite = employees.filter((e) => e.is_on_site === true).length;
     }
 
     return {
@@ -392,6 +472,40 @@ export const portalService = {
       currentlyOnSite,
       todayCheckIns,
       deniedToday,
+    };
+  },
+
+  subscribeToEmployees(onChange: () => void): () => void {
+    if (!isSupabaseConfigured || !supabase) return () => {};
+
+    const channel = supabase
+      .channel('employees-presence')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'employees' },
+        () => onChange()
+      )
+      .subscribe();
+
+    return () => {
+      void supabase?.removeChannel(channel);
+    };
+  },
+
+  subscribeToScanLogs(onChange: () => void): () => void {
+    if (!isSupabaseConfigured || !supabase) return () => {};
+
+    const channel = supabase
+      .channel('scan-logs-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scan_logs' },
+        () => onChange()
+      )
+      .subscribe();
+
+    return () => {
+      void supabase?.removeChannel(channel);
     };
   },
 

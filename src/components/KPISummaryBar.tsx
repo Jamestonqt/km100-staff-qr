@@ -30,7 +30,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
         </div>
       </div>
 
-      {/* Currently On Campus */}
+      {/* Currently On-Site */}
       <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-xl p-4 shadow-sm hover:border-slate-300 dark:hover:border-[#323946] transition-colors">
         <div className="flex items-center justify-between">
           <div>
@@ -67,7 +67,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ summary, loading =
           </div>
         </div>
         <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-          Valid entry gate scans
+          Valid time-in gate scans
         </div>
       </div>
 

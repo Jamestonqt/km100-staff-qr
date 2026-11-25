@@ -44,12 +44,16 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
-  // Compute on-site status based on latest valid scan
+  // Derive on-site status from the most recent valid scan per employee:
+  // CHECK_IN => On-Site, CHECK_OUT => Off-Site
   const onSiteEmployeeCodes = useMemo(() => {
     const latestValidMap = new Map<string, ScanLog>();
     for (const log of logs) {
-      if (log.verification_status === 'VALID' && !latestValidMap.has(log.employee_code)) {
-        latestValidMap.set(log.employee_code, log);
+      if (log.verification_status !== 'VALID') continue;
+      const code = log.employee_code.toUpperCase();
+      const existing = latestValidMap.get(code);
+      if (!existing || new Date(log.scanned_at).getTime() > new Date(existing.scanned_at).getTime()) {
+        latestValidMap.set(code, log);
       }
     }
     const onSiteSet = new Set<string>();
@@ -223,7 +227,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-[#222730]/80 transition-colors">
               {filteredEmployees.map((emp) => {
-                const isOnSite = onSiteEmployeeCodes.has(emp.employee_code);
+                const isOnSite = onSiteEmployeeCodes.has(emp.employee_code.toUpperCase());
                 const isInactive = emp.status === 'Inactive';
                 const isOnLeave = emp.status === 'On Leave';
 

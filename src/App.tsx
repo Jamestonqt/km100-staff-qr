@@ -57,13 +57,26 @@ export function App() {
     loadData();
   }, [loadData]);
 
+  // Keep the live feed and on-site count in sync with Supabase Realtime
+  useEffect(() => {
+    const unsubscribeEmployees = portalService.subscribeToEmployees(loadData);
+    const unsubscribeLogs = portalService.subscribeToScanLogs(loadData);
+    return () => {
+      unsubscribeEmployees();
+      unsubscribeLogs();
+    };
+  }, [loadData]);
+
   // Audio mute toggle
   const handleToggleMute = () => {
     const next = soundManager.toggleMute();
     setIsMuted(next);
   };
 
-  const handleScanRecorded = () => {
+  const handleScanRecorded = (log?: ScanLog) => {
+    if (log) {
+      setLogs((prev) => [log, ...prev.filter((l) => l.id !== log.id)]);
+    }
     loadData();
   };
 

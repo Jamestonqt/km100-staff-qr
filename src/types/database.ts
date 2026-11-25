@@ -18,6 +18,7 @@ export interface Employee {
   status: EmployeeStatus;
   photo_url?: string | null;
   qr_token: string;
+  is_on_site: boolean;
   created_at: string;
 }
 
