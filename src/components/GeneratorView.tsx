@@ -184,17 +184,17 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Form (7 cols) */}
-      <div className="lg:col-span-7 bg-[#16191e] border border-[#222730] rounded-2xl p-6 shadow-xl">
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#222730]">
+      <div className="lg:col-span-7 bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-6 shadow-sm transition-colors">
+        <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200 dark:border-[#222730]">
           <div>
-            <h2 className="text-base font-black text-white tracking-wide">
+            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-wide">
               Issue Official KM100 Staff Badge
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Register faculty or staff &amp; issue verifiable CR80 access pass
             </p>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-orange-950/60 text-orange-400 border border-orange-500/30">
+          <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30">
             CR80 Pass
           </span>
         </div>
@@ -203,8 +203,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Employee Code */}
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Employee Code <span className="text-orange-400">*</span>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Employee Code <span className="text-orange-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -213,7 +213,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                   value={employeeCode}
                   onChange={(e) => setEmployeeCode(e.target.value.toUpperCase())}
                   placeholder="KM100-006"
-                  className="w-full px-3 py-2 bg-[#0d0f12] border border-[#222730] rounded-xl text-xs font-mono font-bold text-white focus:outline-none focus:border-orange-500"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -223,7 +223,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                     const codes = existingEmployees.map((e) => e.employee_code);
                     setEmployeeCode(getNextEmployeeCode(codes));
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center text-slate-400 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-lg"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center text-slate-400 hover:text-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 rounded-lg cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
@@ -232,13 +232,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
             {/* Status */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Account Status
               </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as EmployeeStatus)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
               >
                 <option value="Active">Active (Full Gate Access)</option>
                 <option value="On Leave">On Leave (Access Denied)</option>
@@ -249,8 +249,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
           {/* Full Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
-              Full Legal Name <span className="text-emerald-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Full Legal Name <span className="text-orange-500">*</span>
             </label>
             <input
               type="text"
@@ -258,22 +258,22 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="e.g. Jonathan Mercer"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
 
           {/* Role / Position */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
-              Role / Position <span className="text-emerald-400">*</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Role / Position <span className="text-orange-500">*</span>
             </label>
             <input
               type="text"
               required
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              placeholder="e.g. Operations Supervisor"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+              placeholder="e.g. Technical Vocational Trainer"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
             />
             <div className="flex flex-wrap gap-1 mt-2">
               {COMMON_ROLES.map((r) => (
@@ -281,10 +281,10 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                   key={r}
                   type="button"
                   onClick={() => setRole(r)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
                     role === r
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white'
                   }`}
                 >
                   {r}
@@ -296,13 +296,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Department */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Department
               </label>
               <select
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
               >
                 {DEPARTMENTS.map((dept) => (
                   <option key={dept} value={dept}>
@@ -314,13 +314,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
             {/* Shift Schedule */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Shift Schedule
               </label>
               <select
                 value={shiftSchedule}
                 onChange={(e) => setShiftSchedule(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
               >
                 {SHIFT_SCHEDULES.map((s) => (
                   <option key={s} value={s}>
@@ -334,13 +334,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           {/* Photo URL & Presets */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Staff Photo URL (Optional)
               </label>
               <button
                 type="button"
                 onClick={handlePickRandomAvatar}
-                className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1"
+                className="text-[11px] text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
               >
                 <Sparkles className="w-3 h-3" />
                 Randomize Photo
@@ -352,13 +352,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                 value={photoUrl}
                 onChange={(e) => setPhotoUrl(e.target.value)}
                 placeholder="https://... (or leave empty for initials)"
-                className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
               />
               {photoUrl && (
                 <button
                   type="button"
                   onClick={() => setPhotoUrl('')}
-                  className="px-2.5 py-1 text-xs text-slate-400 hover:text-white bg-slate-800 rounded-xl"
+                  className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 bg-slate-200 dark:text-slate-400 dark:hover:text-white dark:bg-slate-800 rounded-xl cursor-pointer"
                 >
                   Clear
                 </button>
@@ -371,16 +371,16 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
             <button
               type="submit"
               disabled={isSaving || !fullName.trim() || !employeeCode.trim()}
-              className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-xs font-black shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+              className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 disabled:opacity-50 text-white text-xs font-black shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               <UserCheck className="w-4 h-4" />
               <span>{isSaving ? 'Registering...' : 'Save & Issue Badge'}</span>
             </button>
 
             {saveSuccess && (
-              <div className="flex items-center space-x-1.5 text-xs text-orange-400 font-bold animate-fade-in">
+              <div className="flex items-center space-x-1.5 text-xs text-orange-600 dark:text-orange-400 font-bold animate-fade-in">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Badge Registered & Verified!</span>
+                <span>Badge Registered &amp; Verified!</span>
               </div>
             )}
           </div>
@@ -391,15 +391,15 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       <div className="lg:col-span-5 flex flex-col items-center">
         <div className="w-full max-w-[340px]">
           <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-              <FileCheck className="w-3.5 h-3.5 text-orange-400" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
+              <FileCheck className="w-3.5 h-3.5 text-orange-500" />
               Live CR80 Pass Preview
             </span>
-            <span className="text-[10px] font-mono text-slate-400">3.375" x 2.125" CR80</span>
+            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">3.375" x 2.125" CR80</span>
           </div>
 
           {/* Dedicated printable card wrapper */}
-          <div id="printable-badge-area" className="flex justify-center">
+          <div id="printable-badge-area" className="flex justify-center p-3 rounded-2xl bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] shadow-sm transition-colors">
             <BadgeCard employee={previewEmployee} id="cr80-badge-card" />
           </div>
 
@@ -410,9 +410,9 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                 type="button"
                 onClick={handleDownloadQR}
                 aria-label="Download QR code only as PNG"
-                className="min-h-[42px] flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="min-h-[42px] flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <Download className="w-3.5 h-3.5 text-orange-500" />
                 <span>QR Only (PNG)</span>
               </button>
 
@@ -421,9 +421,9 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                 onClick={handleDownloadFullBadge}
                 disabled={isDownloading}
                 aria-label="Download full CR80 ID pass card as PNG"
-                className="min-h-[42px] flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="min-h-[42px] flex items-center justify-center space-x-1.5 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-teal-400" />
+                <ImageIcon className="w-3.5 h-3.5 text-orange-500" />
                 <span>{isDownloading ? 'Rendering...' : 'Full Badge (PNG)'}</span>
               </button>
             </div>
@@ -432,7 +432,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               type="button"
               onClick={handlePrintBadge}
               aria-label="Print official CR80 staff pass card"
-              className="min-h-[44px] w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              className="min-h-[44px] w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white text-xs font-bold transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print Official CR80 Pass</span>

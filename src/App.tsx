@@ -9,8 +9,10 @@ import { SetupModal } from './components/SetupModal';
 import type { Employee, KPISummary, ScanLog } from './types/database';
 import { portalService, isSupabaseConfigured } from './lib/supabase';
 import { soundManager } from './utils/audio';
+import { getInitialTheme, applyTheme, type Theme } from './utils/theme';
 
 export function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [activeTab, setActiveTab] = useState<ActiveTab>('scanner');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [logs, setLogs] = useState<ScanLog[]>([]);
@@ -23,6 +25,15 @@ export function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(soundManager.getMuted());
+
+  // Apply theme class to <html> on theme state changes
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Load all data
   const loadData = useCallback(async () => {
@@ -62,7 +73,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0f12] text-white flex flex-col font-sans selection:bg-orange-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0d0f12] dark:text-white flex flex-col font-sans selection:bg-orange-600 selection:text-white transition-colors">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -71,6 +82,8 @@ export function App() {
         onOpenSetupModal={() => setIsSetupModalOpen(true)}
         isMuted={isMuted}
         onToggleMute={handleToggleMute}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main Content Area */}
@@ -105,15 +118,15 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#222730] bg-[#0d0f12] py-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white dark:border-[#222730] dark:bg-[#0d0f12] py-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            <span className="font-semibold text-orange-500">KM100 Skills & Training Center, Inc.</span> • Staff & Gate Access Control
+            <span className="font-semibold text-orange-600 dark:text-orange-500">KM100 Skills &amp; Training Center, Inc.</span> • Staff &amp; Gate Access Control
           </div>
           <div className="flex items-center space-x-3 text-[11px]">
             <button
               onClick={() => setIsSetupModalOpen(true)}
-              className="text-orange-500 hover:text-orange-400 hover:underline cursor-pointer"
+              className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:underline cursor-pointer"
             >
               Supabase Configuration
             </button>

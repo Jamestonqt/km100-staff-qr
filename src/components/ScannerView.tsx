@@ -522,16 +522,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   return (
     <div className="space-y-6">
       {/* Top Gate Controls */}
-      <div className="bg-[#16191e] border border-[#222730] rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Check-In / Check-Out Segmented Switch */}
-        <div className="flex items-center w-full md:w-auto bg-[#0d0f12] p-1.5 rounded-xl border border-[#222730]">
+        <div className="flex items-center w-full md:w-auto bg-slate-100 dark:bg-[#0d0f12] p-1.5 rounded-xl border border-slate-200 dark:border-[#222730] transition-colors">
           <button
             onClick={() => setScanType('CHECK_IN')}
             aria-label="Set gate mode to CHECK-IN"
-            className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
+            className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
               scanType === 'CHECK_IN'
                 ? 'bg-orange-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
             <LogIn className="w-4 h-4" />
@@ -541,10 +541,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           <button
             onClick={() => setScanType('CHECK_OUT')}
             aria-label="Set gate mode to CHECK-OUT"
-            className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+            className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 cursor-pointer ${
               scanType === 'CHECK_OUT'
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
             <LogOut className="w-4 h-4" />
@@ -555,16 +555,16 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         {/* Gate Station & Camera Selectors */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {/* Gate Station Dropdown */}
-          <div className="flex items-center space-x-2 bg-[#0d0f12] px-3.5 py-2.5 rounded-xl border border-[#222730]">
-            <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
+          <div className="flex items-center space-x-2 bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
+            <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
             <select
               value={gateLocation}
               onChange={(e) => setGateLocation(e.target.value as GateStation)}
               aria-label="Select Gate Station"
-              className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer"
             >
               {GATE_STATIONS.map((station) => (
-                <option key={station} value={station} className="bg-[#16191e] text-white">
+                <option key={station} value={station} className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
                   {station}
                 </option>
               ))}
@@ -578,10 +578,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
               onChange={(e) => setSelectedCameraId(e.target.value)}
               disabled={isScanning}
               aria-label="Select Video Camera"
-              className="bg-[#0d0f12] px-3.5 py-2.5 rounded-xl border border-[#222730] text-xs font-bold text-slate-300 focus:outline-none disabled:opacity-50"
+              className="bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-300 focus:outline-none disabled:opacity-50"
             >
               {cameras.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#16191e] text-white">
+                <option key={c.id} value={c.id} className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
                   {c.label}
                 </option>
               ))}
@@ -604,9 +604,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload QR image or snap photo"
-            className="min-h-[44px] flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl bg-[#222730] hover:bg-[#2c3340] text-slate-200 border border-[#323946] text-xs font-bold transition-all cursor-pointer"
+            className="min-h-[44px] flex items-center space-x-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-200 dark:border-[#323946] text-xs font-bold transition-all cursor-pointer"
           >
-            <Upload className="w-4 h-4 text-orange-400" />
+            <Upload className="w-4 h-4 text-orange-500" />
             <span className="hidden sm:inline">Snap / Upload Photo</span>
           </button>
 
@@ -645,15 +645,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (7 cols): Camera Viewfinder + Manual Entry */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="bg-[#16191e] border border-[#222730] rounded-2xl p-5 shadow-xl relative overflow-hidden">
+          <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-5 shadow-sm transition-colors relative overflow-hidden">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    isScanning ? 'bg-orange-500 animate-ping' : 'bg-slate-600'
+                    isScanning ? 'bg-orange-500 animate-ping' : 'bg-slate-400 dark:bg-slate-600'
                   }`}
                 />
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-200">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                   Optical Scanner • {gateLocation}
                 </h3>
               </div>
@@ -665,7 +665,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                   className={`p-1.5 rounded-lg border text-xs flex items-center space-x-1 ${
                     torchOn
                       ? 'bg-orange-500 border-orange-400 text-slate-950 font-bold'
-                      : 'bg-[#222730] border-[#323946] text-slate-300'
+                      : 'bg-slate-100 border-slate-300 text-slate-700 dark:bg-[#222730] dark:border-[#323946] dark:text-slate-300'
                   }`}
                 >
                   <Flashlight className="w-3.5 h-3.5" />
@@ -675,7 +675,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             </div>
 
             {/* Video Feed Box with Industrial Reticle */}
-            <div className="relative w-full aspect-square max-h-[380px] bg-[#0d0f12] rounded-xl overflow-hidden border border-[#222730] flex items-center justify-center">
+            <div className="relative w-full aspect-square max-h-[380px] bg-slate-950 dark:bg-[#0d0f12] rounded-xl overflow-hidden border border-slate-300 dark:border-[#222730] flex items-center justify-center">
               {/* html5-qrcode target div - ALWAYS present and sized in DOM */}
               <div
                 id="qr-reader-container"
@@ -698,13 +698,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
               {/* Standby Idle State Overlay (renders when not scanning) */}
               {!isScanning && !cameraError && (
-                <div className="absolute inset-0 z-10 bg-[#0d0f12] flex flex-col items-center justify-center p-6 text-center space-y-3">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-[#12151a] border border-[#222730] flex items-center justify-center text-slate-400">
-                    <Camera className="w-8 h-8 text-orange-400" />
+                <div className="absolute inset-0 z-10 bg-slate-100 dark:bg-[#0d0f12] flex flex-col items-center justify-center p-6 text-center space-y-3 transition-colors">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-white border border-slate-300 dark:bg-[#12151a] dark:border-[#222730] flex items-center justify-center text-slate-400">
+                    <Camera className="w-8 h-8 text-orange-500" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-white">Scanner Standby</h4>
-                    <p className="text-xs text-slate-400 max-w-xs mt-1">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Scanner Standby</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mt-1">
                       Click "Start Scanner" to open live video, snap a photo, or enter badge code below.
                     </p>
                   </div>
@@ -730,9 +730,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3.5 py-2.5 rounded-xl bg-[#222730] hover:bg-[#2c3340] text-xs font-bold text-slate-300 border border-[#323946] transition-colors cursor-pointer flex items-center space-x-1.5"
+                      className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-[#323946] text-xs font-bold transition-colors cursor-pointer flex items-center space-x-1.5"
                     >
-                      <Upload className="w-3.5 h-3.5 text-orange-400" />
+                      <Upload className="w-3.5 h-3.5 text-orange-500" />
                       <span>Snap / Upload Photo</span>
                     </button>
                   </div>
@@ -741,7 +741,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
               {/* Camera Error Message Overlay */}
               {cameraError && (
-                <div className="absolute inset-0 z-20 bg-[#0d0f12]/95 flex flex-col items-center justify-center p-6 text-center">
+                <div className="absolute inset-0 z-20 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center">
                   <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-1">
                     Camera Access Alert
@@ -773,64 +773,64 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             {/* Manual Code Input Bar */}
             <form onSubmit={handleManualSubmit} className="mt-4 flex gap-2">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Enter Badge Code (e.g., KM100-001)..."
                   aria-label="Manual employee code input"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 bg-[#0d0f12] border border-[#222730] rounded-xl text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isVerifying || !manualCode.trim()}
                 aria-label="Verify entered badge code"
-                className="min-h-[42px] px-5 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                className="min-h-[42px] px-5 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-xs font-black rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
               >
                 Verify
               </button>
             </form>
 
             {/* Quick Test Simulation Row */}
-            <div className="mt-3.5 pt-3 border-t border-[#222730]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+            <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-[#222730] transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
                 Simulate Scans (For Testing)
               </span>
               <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   onClick={() => handleVerifyPayload('KM100-001')}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#20252e] hover:bg-[#2b3240] border border-[#2f3745] text-orange-300 text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-[#20252e] dark:hover:bg-[#2b3240] dark:border-[#2f3745] dark:text-orange-300 text-[11px] font-semibold transition-colors cursor-pointer"
                 >
                   ✓ Elena (Instructor)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleVerifyPayload('KM100-003')}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#20252e] hover:bg-[#2b3240] border border-[#2f3745] text-orange-300 text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-[#20252e] dark:hover:bg-[#2b3240] dark:border-[#2f3745] dark:text-orange-300 text-[11px] font-semibold transition-colors cursor-pointer"
                 >
                   ✓ Aria (Safety Officer)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleVerifyPayload('KM100-004')}
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 text-amber-300 text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:border-amber-500/30 dark:text-amber-300 text-[11px] font-semibold transition-colors cursor-pointer"
                 >
                   ⚠ David (On Leave)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleVerifyPayload('KM100-005')}
-                  className="px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:border-rose-500/30 dark:text-rose-300 text-[11px] font-semibold transition-colors cursor-pointer"
                 >
                   ✕ Sarah (Inactive)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleVerifyPayload('{"org":"ROGUE","code":"FAKE-999"}')}
-                  className="px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-[11px] font-semibold transition-colors"
+                  className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:border-rose-500/30 dark:text-rose-300 text-[11px] font-semibold transition-colors cursor-pointer"
                 >
                   ✕ Unregistered Badge
                 </button>
@@ -843,23 +843,23 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         <div className="lg:col-span-5 space-y-4">
           {/* High-Visibility Verification Result Card */}
           <div
-            className={`border rounded-2xl p-5 shadow-xl transition-all ${
+            className={`border rounded-2xl p-5 shadow-sm transition-all ${
               !lastResult
-                ? 'bg-[#16191e] border-[#222730]'
+                ? 'bg-white border-slate-200 dark:bg-[#16191e] dark:border-[#222730]'
                 : lastResult.status === 'VALID'
-                ? 'bg-[#16191e] border-emerald-500/80 shadow-emerald-950/30'
+                ? 'bg-white border-emerald-500 dark:bg-[#16191e] dark:border-emerald-500/80'
                 : lastResult.status === 'DUPLICATE_SCAN'
-                ? 'bg-[#16191e] border-amber-500/80 shadow-amber-950/30'
-                : 'bg-[#16191e] border-rose-500/80 shadow-rose-950/30'
+                ? 'bg-white border-amber-500 dark:bg-[#16191e] dark:border-amber-500/80'
+                : 'bg-white border-rose-500 dark:bg-[#16191e] dark:border-rose-500/80'
             }`}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[#222730]">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#222730]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Gate Verification Status
               </span>
               {lastResult && (
-                <span className="text-[10px] font-mono text-slate-400 flex items-center">
-                  <Clock className="w-3 h-3 mr-1 text-orange-400" />
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center">
+                  <Clock className="w-3 h-3 mr-1 text-orange-500" />
                   {lastResult.timestamp}
                 </span>
               )}
@@ -898,9 +898,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
                 {/* Scanned Employee Profile details */}
                 {lastResult.employee ? (
-                  <div className="bg-[#0d0f12] rounded-xl p-4 border border-[#222730] flex items-center space-x-4">
+                  <div className="bg-slate-50 dark:bg-[#0d0f12] rounded-xl p-4 border border-slate-200 dark:border-[#222730] flex items-center space-x-4 transition-colors">
                     {/* Avatar */}
-                    <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-orange-500 bg-[#16191e]">
+                    <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-orange-500 bg-white dark:bg-[#16191e]">
                       {lastResult.employee.photo_url ? (
                         <img
                           src={lastResult.employee.photo_url}
@@ -908,7 +908,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sm font-black text-orange-400">
+                        <div className="w-full h-full flex items-center justify-center text-sm font-black text-orange-500">
                           {getInitials(lastResult.employee.full_name)}
                         </div>
                       )}
@@ -916,37 +916,37 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm font-bold text-white truncate">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {lastResult.employee.full_name}
                         </span>
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-orange-950/60 text-orange-300 border border-orange-500/30">
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-500/30">
                           {lastResult.employee.employee_code}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 font-semibold truncate mt-0.5">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold truncate mt-0.5">
                         {lastResult.employee.role}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#16191e] border border-[#222730] text-slate-300">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-[#16191e] border border-slate-200 dark:border-[#222730] text-slate-700 dark:text-slate-300">
                           {lastResult.employee.department}
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#16191e] border border-[#222730] text-slate-400">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-[#16191e] border border-slate-200 dark:border-[#222730] text-slate-500 dark:text-slate-400">
                           {lastResult.gateLocation}
                         </span>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-[#0d0f12] rounded-xl border border-[#222730] text-xs text-slate-400 font-mono">
-                    Scanned Badge: <span className="text-white font-bold">{lastResult.scannedCode}</span>
+                  <div className="p-3 bg-slate-50 dark:bg-[#0d0f12] rounded-xl border border-slate-200 dark:border-[#222730] text-xs text-slate-600 dark:text-slate-400 font-mono">
+                    Scanned Badge: <span className="text-slate-900 dark:text-white font-bold">{lastResult.scannedCode}</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="py-12 text-center text-slate-500">
-                <Sparkles className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-                <p className="text-xs font-semibold text-slate-400">Gate scanner is ready.</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+              <div className="py-12 text-center text-slate-400 dark:text-slate-500">
+                <Sparkles className="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-400">Gate scanner is ready.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5">
                   Scan badge QR code via camera or manual search.
                 </p>
               </div>
@@ -954,12 +954,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           </div>
 
           {/* Recent Gate Activity Log */}
-          <div className="bg-[#16191e] border border-[#222730] rounded-2xl p-4 shadow-lg">
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#222730]">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">
+          <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-4 shadow-sm transition-colors">
+            <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 dark:border-[#222730]">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-300">
                 Recent Campus Activity
               </h4>
-              <span className="text-[10px] font-bold text-orange-400">Live Feed</span>
+              <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400">Live Feed</span>
             </div>
 
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
@@ -968,19 +968,19 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                 return (
                   <div
                     key={log.id}
-                    className="p-2.5 rounded-xl bg-[#0d0f12] border border-[#222730] flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 dark:bg-[#0d0f12] dark:border-[#222730] dark:hover:bg-[#12151b] flex items-center justify-between text-xs transition-colors"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
                       <div
                         className={`w-2 h-2 rounded-full shrink-0 ${
-                          isValid ? 'bg-emerald-400' : 'bg-rose-500'
+                          isValid ? 'bg-emerald-500' : 'bg-rose-500'
                         }`}
                       />
                       <div className="truncate">
-                        <div className="font-bold text-white truncate">
+                        <div className="font-bold text-slate-900 dark:text-white truncate">
                           {log.employee_name}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                           {log.employee_code} • {log.gate_location}
                         </div>
                       </div>
@@ -990,8 +990,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                       <span
                         className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
                           log.scan_type === 'CHECK_IN'
-                            ? 'bg-orange-950/60 text-orange-400 border border-orange-500/30'
-                            : 'bg-indigo-950/60 text-indigo-400 border border-indigo-500/30'
+                            ? 'bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30'
+                            : 'bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
                         }`}
                       >
                         {log.scan_type === 'CHECK_IN' ? 'Entry' : 'Exit'}
@@ -1008,7 +1008,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
               })}
 
               {recentLogs.length === 0 && (
-                <div className="py-6 text-center text-xs text-slate-600">No gate activity recorded yet.</div>
+                <div className="py-6 text-center text-xs text-slate-500">No gate activity recorded yet.</div>
               )}
             </div>
           </div>
