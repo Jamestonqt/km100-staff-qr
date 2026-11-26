@@ -546,21 +546,30 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       const config: Html5QrcodeCameraScanConfig = {
         fps: 15,
         qrbox: qrboxFunction,
-        // Request HD video for sharper QR module edges on USB and mobile cameras.
-        videoConstraints: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
       };
 
       // Multi-tier camera initialization:
       // 1. Chosen camera ID or rear camera (facingMode: environment)
       // 2. Front camera (facingMode: user)
       // 3. Fallback to any enumerated video camera
+      //
+      // NOTE: html5-qrcode ignores `cameraIdOrConfig` whenever `videoConstraints`
+      // is set, so the device/facing constraint MUST be merged into the HD
+      // constraints here — otherwise the browser opens its default (front) cam.
       const tryStart = async (cameraConfig: string | MediaTrackConstraints) => {
+        const deviceConstraint: MediaTrackConstraints =
+          typeof cameraConfig === 'string' ? { deviceId: cameraConfig } : cameraConfig;
+
         await scanner.start(
           cameraConfig,
-          config,
+          {
+            ...config,
+            videoConstraints: {
+              ...deviceConstraint,
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          },
           (decodedText) => {
             handleVerifyPayloadRef.current(decodedText);
           },
@@ -611,6 +620,26 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             label: d.label || `Camera ${d.id.substring(0, 5)}`,
           }));
           setCameras(list);
+
+          // Sync the dropdown with the camera that actually started, and fall
+          // back to the rear/environment camera when nothing was chosen.
+          let activeId = '';
+          try {
+            activeId = scanner.getRunningTrackSettings().deviceId || '';
+          } catch {
+            // Track settings unavailable — ignore
+          }
+          const backCam = devices.find(
+            (d) =>
+              d.label.toLowerCase().includes('back') ||
+              d.label.toLowerCase().includes('rear') ||
+              d.label.toLowerCase().includes('environment')
+          );
+          if (activeId && devices.some((d) => d.id === activeId)) {
+            setSelectedCameraId(activeId);
+          } else if (!selectedCameraId && backCam) {
+            setSelectedCameraId(backCam.id);
+          }
         }
       } catch {
         // Ignore
