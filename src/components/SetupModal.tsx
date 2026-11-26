@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Database,
@@ -19,6 +19,18 @@ interface SetupModalProps {
 export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onResetData }) => {
   const [copiedEnv, setCopiedEnv] = useState(false);
   const [copiedSQL, setCopiedSQL] = useState(false);
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -76,12 +88,17 @@ CREATE TABLE IF NOT EXISTS scan_logs (
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-3xl p-6 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto transition-colors">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="setup-modal-title"
+      className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto transition-colors">
         <button
           onClick={onClose}
           aria-label="Close database setup modal"
-          className="absolute right-4 top-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-400 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+          className="absolute right-4 top-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-400 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -91,7 +108,7 @@ CREATE TABLE IF NOT EXISTS scan_logs (
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Database &amp; Supabase Setup</h3>
+            <h3 id="setup-modal-title" className="text-base font-bold text-slate-900 dark:text-white">Database &amp; Supabase Setup</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">KM100 Portal Backend Configuration</p>
           </div>
         </div>
@@ -120,7 +137,7 @@ CREATE TABLE IF NOT EXISTS scan_logs (
 
         {/* Steps to connect */}
         <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-950 dark:border-slate-800 space-y-3 transition-colors">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] space-y-3 transition-colors">
             <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Step 1: Execute Database Schema</span>
             </h4>
@@ -129,12 +146,12 @@ CREATE TABLE IF NOT EXISTS scan_logs (
               <code className="text-orange-600 dark:text-orange-400 font-mono">supabase/schema.sql</code>. It creates the <code className="text-slate-900 dark:text-white">employees</code> and <code className="text-slate-900 dark:text-white">scan_logs</code> tables, RLS policies, and 5 pre-seeded KM100 staff members.
             </p>
             <div className="relative">
-              <pre className="p-3 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg font-mono text-[11px] text-slate-700 dark:text-slate-400 overflow-x-auto max-h-36">
+              <pre className="p-3 bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-lg font-mono text-[11px] text-slate-700 dark:text-slate-400 overflow-x-auto max-h-36">
                 {sqlQuickSnippet}
               </pre>
               <button
                 onClick={() => copyToClipboard(sqlQuickSnippet, 'sql')}
-                className="absolute right-2 top-2 p-1.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-none text-[10px] flex items-center gap-1 cursor-pointer"
+                className="absolute right-2 top-2 p-1.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-none text-[10px] flex items-center gap-1 cursor-pointer"
               >
                 {copiedSQL ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 <span>{copiedSQL ? 'Copied' : 'Copy'}</span>
@@ -142,18 +159,18 @@ CREATE TABLE IF NOT EXISTS scan_logs (
             </div>
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-slate-950 dark:border-slate-800 space-y-3 transition-colors">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] space-y-3 transition-colors">
             <h4 className="font-bold text-slate-900 dark:text-white">Step 2: Add Environment Variables</h4>
             <p className="text-slate-600 dark:text-slate-400">
               Create or edit your <code className="text-orange-600 dark:text-orange-400 font-mono">.env</code> file in the project root:
             </p>
             <div className="relative">
-              <pre className="p-3 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg font-mono text-[11px] text-orange-600 dark:text-emerald-300 overflow-x-auto">
+              <pre className="p-3 bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-lg font-mono text-[11px] text-orange-600 dark:text-emerald-300 overflow-x-auto">
                 {envTemplate}
               </pre>
               <button
                 onClick={() => copyToClipboard(envTemplate, 'env')}
-                className="absolute right-2 top-2 p-1.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-none text-[10px] flex items-center gap-1 cursor-pointer"
+                className="absolute right-2 top-2 p-1.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-none text-[10px] flex items-center gap-1 cursor-pointer"
               >
                 {copiedEnv ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
                 <span>{copiedEnv ? 'Copied' : 'Copy'}</span>
@@ -165,7 +182,7 @@ CREATE TABLE IF NOT EXISTS scan_logs (
           <div className="pt-2 flex items-center justify-between">
             <button
               onClick={handleReset}
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-none text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-none text-xs font-semibold transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
               <span>Reset Demo Staff &amp; Logs</span>

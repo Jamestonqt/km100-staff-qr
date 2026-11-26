@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import html2canvas from 'html2canvas';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Download,
   Printer,
@@ -66,8 +65,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     setEmployeeCode(nextCode);
   }, [existingEmployees]);
 
-  // Temporary preview employee object
-  const previewEmployee: Employee = {
+  // Memoized preview employee object
+  const previewEmployee: Employee = useMemo(() => ({
     id: 'preview',
     employee_code: employeeCode || 'KM100-XXX',
     full_name: fullName.trim() || 'Staff Name',
@@ -78,8 +77,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     photo_url: photoUrl || null,
     qr_token: generateQRToken(employeeCode || 'KM100-XXX'),
     is_on_site: false,
-    created_at: new Date().toISOString(),
-  };
+    created_at: '2026-01-01T00:00:00.000Z',
+  }), [employeeCode, fullName, role, department, shiftSchedule, status, photoUrl]);
 
   const handlePickRandomAvatar = () => {
     const random = SAMPLE_AVATARS[Math.floor(Math.random() * SAMPLE_AVATARS.length)];
@@ -162,6 +161,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
     setIsDownloading(true);
     try {
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
@@ -211,11 +211,12 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Employee Code */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="gen-employee-code" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Employee Code <span className="text-orange-500">*</span>
               </label>
               <div className="relative">
                 <input
+                  id="gen-employee-code"
                   type="text"
                   required
                   value={employeeCode}
@@ -240,15 +241,16 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
             {/* Status */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="gen-status" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Account Status
               </label>
               <select
+                id="gen-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as EmployeeStatus)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
               >
-                <option value="Active">Active (Full Gate Access)</option>
+                <option value="Active">Active (Full Access)</option>
                 <option value="On Leave">On Leave (Access Denied)</option>
                 <option value="Inactive">Inactive (Revoked)</option>
               </select>
@@ -257,10 +259,11 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
           {/* Full Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label htmlFor="gen-full-name" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Full Legal Name <span className="text-orange-500">*</span>
             </label>
             <input
+              id="gen-full-name"
               type="text"
               required
               value={fullName}
@@ -272,10 +275,11 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
           {/* Role / Position */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label htmlFor="gen-role" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Role / Position <span className="text-orange-500">*</span>
             </label>
             <input
+              id="gen-role"
               type="text"
               required
               value={role}
@@ -304,10 +308,11 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Department */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="gen-department" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Department
               </label>
               <select
+                id="gen-department"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
@@ -322,10 +327,11 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
             {/* Shift Schedule */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="gen-shift" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Shift Schedule
               </label>
               <select
+                id="gen-shift"
                 value={shiftSchedule}
                 onChange={(e) => setShiftSchedule(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 cursor-pointer transition-colors"
@@ -342,7 +348,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           {/* Photo URL & Presets */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="gen-photo-url" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Staff Photo URL (Optional)
               </label>
               <button
@@ -356,6 +362,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
             </div>
             <div className="flex gap-2">
               <input
+                id="gen-photo-url"
                 type="url"
                 value={photoUrl}
                 onChange={(e) => setPhotoUrl(e.target.value)}

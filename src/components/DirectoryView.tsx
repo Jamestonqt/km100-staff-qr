@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import html2canvas from 'html2canvas';
 import {
   Search,
   Filter,
@@ -65,6 +64,19 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, [selectedBadgeEmployee]);
+
+  // Close modals on Escape key press
+  useEffect(() => {
+    if (!selectedBadgeEmployee && !editingEmployee) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedBadgeEmployee) setSelectedBadgeEmployee(null);
+        if (editingEmployee) setEditingEmployee(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedBadgeEmployee, editingEmployee]);
 
   // Derive on-site status from the most recent valid scan per employee:
   // CHECK_IN => On-Site, CHECK_OUT => Off-Site
@@ -138,6 +150,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     const previousTransform = scaler?.style.transform ?? '';
     if (scaler) scaler.style.transform = 'none';
     try {
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
@@ -488,7 +501,12 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
       {/* View Badge Modal */}
       {selectedBadgeEmployee && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="badge-modal-title"
+          className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
           <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col items-center transition-colors">
             <button
               onClick={() => setSelectedBadgeEmployee(null)}
@@ -498,7 +516,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 uppercase tracking-wider">
+            <h3 id="badge-modal-title" className="text-sm font-black text-slate-900 dark:text-white mb-4 uppercase tracking-wider">
               Official KM100 Personnel Badge
             </h3>
 
@@ -548,7 +566,12 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
       {/* Edit Employee Modal */}
       {editingEmployee && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-modal-title"
+          className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
           <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative transition-colors">
             <button
               onClick={() => setEditingEmployee(null)}
@@ -558,16 +581,17 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4 uppercase tracking-wider">
+            <h3 id="edit-modal-title" className="text-sm font-black text-slate-900 dark:text-white mb-4 uppercase tracking-wider">
               Edit Staff Member • {editingEmployee.employee_code}
             </h3>
 
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label htmlFor="edit-full-name" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Full Name
                 </label>
                 <input
+                  id="edit-full-name"
                   type="text"
                   required
                   value={editingEmployee.full_name}
@@ -580,10 +604,11 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label htmlFor="edit-role" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Role / Position
                   </label>
                   <input
+                    id="edit-role"
                     type="text"
                     required
                     value={editingEmployee.role}
@@ -595,10 +620,11 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label htmlFor="edit-department" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Department
                   </label>
                   <select
+                    id="edit-department"
                     value={editingEmployee.department}
                     onChange={(e) =>
                       setEditingEmployee({ ...editingEmployee, department: e.target.value })
@@ -616,10 +642,11 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label htmlFor="edit-shift" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Shift Schedule
                   </label>
                   <select
+                    id="edit-shift"
                     value={editingEmployee.shift_schedule}
                     onChange={(e) =>
                       setEditingEmployee({ ...editingEmployee, shift_schedule: e.target.value })
@@ -635,10 +662,11 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label htmlFor="edit-status" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Account Status
                   </label>
                   <select
+                    id="edit-status"
                     value={editingEmployee.status}
                     onChange={(e) =>
                       setEditingEmployee({

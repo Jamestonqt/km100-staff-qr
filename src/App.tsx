@@ -147,7 +147,7 @@ export function App() {
       <footer className="border-t border-slate-200 bg-white dark:border-[#222730] dark:bg-[#0d0f12] py-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            <span className="font-semibold text-orange-600 dark:text-orange-500">KM100 Skills &amp; Training Center, Inc.</span> • Staff &amp; Gate Access Control
+            <span className="font-semibold text-orange-600 dark:text-orange-500">KM100 Skills &amp; Training Center, Inc.</span> • Staff Access &amp; Attendance Portal
           </div>
           <div className="flex items-center space-x-3 text-[11px]">
             <button

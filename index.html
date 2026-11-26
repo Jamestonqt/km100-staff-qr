@@ -6,8 +6,20 @@
     <title>KM100 Skills &amp; Training Center — Staff &amp; Access Portal</title>
     <link rel="icon" type="image/png" href="/km100-logo.png" />
     <meta name="description" content="Official Staff Access, Badge Generator &amp; Gate Verification Portal for KM100 Skills and Training Center, Inc." />
+    <script>
+      (function() {
+        try {
+          var mode = localStorage.getItem('km100_theme_mode');
+          if (mode === 'dark' || (!mode && window.matchMedia && !window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('dark');
+          } else if (mode === 'light') {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#0d0f12] text-slate-100 min-h-screen">
+  <body class="min-h-screen font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

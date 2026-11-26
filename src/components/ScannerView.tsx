@@ -63,10 +63,10 @@ const BANNER_BORDER: Record<BannerTone, string> = {
 
 function getBannerTitle(status: ScanResultStatus, scanType: ScanType): string {
   if (status === 'VALID') {
-    return scanType === 'CHECK_IN' ? 'TIME IN RECORDED' : 'TIME OUT RECORDED';
+    return scanType === 'CHECK_IN' ? 'LOGIN RECORDED' : 'LOGOUT RECORDED';
   }
-  if (status === 'ALREADY_ON_SITE') return 'ALREADY ON-SITE';
-  if (status === 'NOT_ON_SITE') return 'NOT ON-SITE';
+  if (status === 'ALREADY_ON_SITE') return 'ALREADY LOGGED IN';
+  if (status === 'NOT_ON_SITE') return 'NOT LOGGED IN';
   if (status === 'DUPLICATE_SCAN') return 'PLEASE WAIT';
   return 'ACCESS DENIED';
 }
@@ -352,7 +352,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'ALREADY_ON_SITE',
-          message: `${employee.full_name} already timed in at ${getSessionCheckInTime(recentLogsRef.current, employee.employee_code) ?? 'earlier today'}. Switch to Time Out to sign out.`,
+          message: `${employee.full_name} is already logged in (${getSessionCheckInTime(recentLogsRef.current, employee.employee_code) ?? 'earlier today'}). Switch to Logout to sign out.`,
           scanType: currentScanType,
           timestamp: formattedTime,
           employee,
@@ -382,7 +382,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'NOT_ON_SITE',
-          message: `${employee.full_name} has no active Time In today. Please scan Time In first.`,
+          message: `${employee.full_name} is not currently logged in / on-site. Please scan Login first.`,
           scanType: currentScanType,
           timestamp: formattedTime,
           employee,
@@ -404,12 +404,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       soundManager.playSuccessChime();
 
       if (currentScanType === 'CHECK_IN') {
-        confetti({
-          particleCount: 40,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#10b981', '#14b8a6', '#06b6d4'],
-        });
+        const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!prefersReducedMotion) {
+          confetti({
+            particleCount: 40,
+            spread: 60,
+            origin: { y: 0.7 },
+            colors: ['#10b981', '#14b8a6', '#06b6d4'],
+          });
+        }
       }
 
       await portalService.setEmployeeOnSite(employee.id, nextOnSite);
@@ -427,8 +430,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         status: 'VALID',
         message:
           currentScanType === 'CHECK_IN'
-            ? `Welcome, ${employee.full_name} — Time In logged at ${formattedTime}.`
-            : `Goodbye, ${employee.full_name} — Time Out logged at ${formattedTime}.`,
+            ? `Welcome, ${employee.full_name} — Login recorded at ${formattedTime}.`
+            : `Goodbye, ${employee.full_name} — Logout recorded at ${formattedTime}.`,
         scanType: currentScanType,
         timestamp: formattedTime,
         employee,
@@ -754,11 +757,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
     <div className="space-y-6">
         {/* Top Scanner Controls */}
       <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-4 sm:p-5 shadow-sm transition-colors flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* TIME IN / TIME OUT Segmented Switch */}
+        {/* LOGIN / LOGOUT Segmented Switch */}
         <div className="flex items-center w-full md:w-auto bg-slate-100 dark:bg-[#0d0f12] p-1.5 rounded-xl border border-slate-200 dark:border-[#222730] transition-colors">
           <button
             onClick={() => handleScanTypeChange('CHECK_IN')}
-            aria-label="Set scan mode to Time In"
+            aria-label="Set scan mode to LOGIN"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
               scanType === 'CHECK_IN'
                 ? 'bg-orange-600 text-white shadow-sm'
@@ -766,12 +769,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogIn className="w-4 h-4" />
-            <span>Time In</span>
+            <span>LOGIN</span>
           </button>
 
           <button
             onClick={() => handleScanTypeChange('CHECK_OUT')}
-            aria-label="Set scan mode to Time Out"
+            aria-label="Set scan mode to LOGOUT"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 cursor-pointer ${
               scanType === 'CHECK_OUT'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -779,7 +782,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogOut className="w-4 h-4" />
-            <span>Time Out</span>
+            <span>LOGOUT</span>
           </button>
         </div>
 
@@ -865,7 +868,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
               <div className="flex items-center space-x-2">
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    isScanning ? 'bg-orange-500 animate-ping' : 'bg-slate-400 dark:bg-slate-600'
+                    isScanning ? 'bg-orange-500 animate-ping motion-reduce:animate-none' : 'bg-slate-400 dark:bg-slate-600'
                   }`}
                 />
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -1128,8 +1131,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
               {recentLogs.slice(0, 5).map((log) => {
                 const isValid = log.verification_status === 'VALID';
-                const attendanceType = log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out';
-                const isTimeIn = attendanceType.toLowerCase().replace('_', ' ') === 'time in';
+                const isLogin = log.scan_type === 'CHECK_IN';
                 return (
                   <div
                     key={log.id}
@@ -1154,12 +1156,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                     <div className="text-right shrink-0">
                       <span
                         className={`px-2 py-0.5 rounded text-[9px] font-black border ${
-                          isTimeIn
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          isLogin
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-500/30'
+                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
                         }`}
                       >
-                        {isTimeIn ? 'Time In' : 'Time Out'}
+                        {isLogin ? 'LOGIN' : 'LOGOUT'}
                       </span>
                       <div className="text-[9px] text-slate-500 font-mono mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {

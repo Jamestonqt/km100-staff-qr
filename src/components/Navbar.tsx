@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="hidden md:flex items-center space-x-1.5 p-1 bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl transition-colors">
             <button
               onClick={() => onTabChange('scanner')}
-              aria-label="Open Gate Scanner Tab"
+              aria-label="Open Scanner Tab"
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
                 activeTab === 'scanner'
                   ? 'bg-orange-600 text-white shadow-sm'
@@ -75,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Shield className="w-4 h-4" />
-              <span>Gate Scanner</span>
+              <span>Access Scanner</span>
             </button>
 
             <button
@@ -147,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onToggleTheme}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2 sm:p-2.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+              className="min-h-[40px] min-w-[40px] p-2 sm:p-2.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26] transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               {theme === 'dark' ? (
                 <Sun className="w-4 h-4 text-amber-400" />
@@ -159,9 +159,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Mute/Unmute sound effects */}
             <button
               onClick={onToggleMute}
-              title={isMuted ? 'Gate audio muted. Click to enable sound' : 'Gate audio enabled. Click to mute'}
-              aria-label={isMuted ? 'Gate audio muted. Press to unmute audio chimes' : 'Gate audio active. Press to mute audio'}
-              className="p-2 sm:p-2.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+              title={isMuted ? 'Portal audio muted. Click to enable sound' : 'Portal audio enabled. Click to mute'}
+              aria-label={isMuted ? 'Portal audio muted. Press to unmute audio chimes' : 'Portal audio active. Press to mute audio'}
+              className="min-h-[40px] min-w-[40px] p-2 sm:p-2.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26] transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-rose-500 dark:text-rose-400" /> : <Volume2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
             </button>
@@ -172,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex md:hidden items-center justify-around py-1.5 border-t border-slate-200 dark:border-[#222730] transition-colors">
           <button
             onClick={() => onTabChange('scanner')}
-            aria-label="Navigate to Gate Scanner"
+            aria-label="Navigate to Access Scanner"
             className={`min-h-[44px] min-w-[44px] flex flex-col items-center justify-center py-1 px-3 text-[10px] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 rounded-lg cursor-pointer ${
               activeTab === 'scanner' ? 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950/30' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
             }`}

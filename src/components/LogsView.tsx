@@ -126,7 +126,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
       `"${l.employee_code}"`,
       `"${l.employee_name.replace(/"/g, '""')}"`,
       `"${l.department || 'N/A'}"`,
-      `"${l.scan_type === 'CHECK_IN' ? 'TIME IN' : 'TIME OUT'}"`,
+      `"${l.scan_type === 'CHECK_IN' ? 'LOGIN' : 'LOGOUT'}"`,
       `"${l.verification_status}"`,
     ]);
 
@@ -272,10 +272,10 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                 All Types
               </option>
               <option value="CHECK_IN" className="bg-white text-emerald-600 dark:bg-[#16191e] dark:text-emerald-400">
-                Time In
+                Login
               </option>
               <option value="CHECK_OUT" className="bg-white text-blue-600 dark:bg-[#16191e] dark:text-blue-400">
-                Time Out
+                Logout
               </option>
             </select>
           </div>
@@ -370,7 +370,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                         ) : (
                           <LogOut className="w-2.5 h-2.5 mr-0.5" />
                         )}
-                        {log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out'}
+                        {log.scan_type === 'CHECK_IN' ? 'LOGIN' : 'LOGOUT'}
                       </span>
                     </td>
 
@@ -450,7 +450,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                   ) : (
                     <LogOut className="w-2.5 h-2.5 mr-1" />
                   )}
-                  {log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out'}
+                  {log.scan_type === 'CHECK_IN' ? 'LOGIN' : 'LOGOUT'}
                 </span>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
