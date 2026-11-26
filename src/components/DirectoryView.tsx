@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import {
   Search,
@@ -29,6 +29,16 @@ interface DirectoryViewProps {
   onEmployeeUpdated: () => void;
 }
 
+// Fit the fixed 340x530 CR80 badge inside the modal viewport without scrolling.
+const BADGE_WIDTH = 340;
+const BADGE_HEIGHT = 530;
+const getBadgeScale = (): number => {
+  if (typeof window === 'undefined') return 1;
+  const maxHeight = window.innerHeight * 0.92 - 160;
+  const maxWidth = Math.min(window.innerWidth - 80, 400);
+  return Math.min(1, Math.max(0.5, Math.min(maxHeight / BADGE_HEIGHT, maxWidth / BADGE_WIDTH)));
+};
+
 export const DirectoryView: React.FC<DirectoryViewProps> = ({
   employees,
   logs,
@@ -44,6 +54,17 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [badgeScale, setBadgeScale] = useState<number>(1);
+  const badgeScalerRef = useRef<HTMLDivElement>(null);
+
+  // Keep the badge scaled to fit the modal as the window resizes.
+  useEffect(() => {
+    if (!selectedBadgeEmployee) return;
+    const update = () => setBadgeScale(getBadgeScale());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [selectedBadgeEmployee]);
 
   // Derive on-site status from the most recent valid scan per employee:
   // CHECK_IN => On-Site, CHECK_OUT => Off-Site
@@ -112,6 +133,10 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     if (!badgeEl || !selectedBadgeEmployee) return;
 
     setIsDownloading(true);
+    // Capture the badge at its native 340x530 size, not the scaled preview.
+    const scaler = badgeScalerRef.current;
+    const previousTransform = scaler?.style.transform ?? '';
+    if (scaler) scaler.style.transform = 'none';
     try {
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
@@ -128,6 +153,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     } catch (err) {
       console.error('Failed to download badge:', err);
     } finally {
+      if (scaler) scaler.style.transform = previousTransform;
       setIsDownloading(false);
     }
   };
@@ -476,13 +502,21 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
               Official KM100 Personnel Badge
             </h3>
 
-            {/* Badge Card */}
-            <div id="printable-badge-area" className="w-full overflow-x-auto flex justify-center">
-              <BadgeCard
-                employee={selectedBadgeEmployee}
-                id="modal-badge-preview"
-                className="transform scale-95 origin-top"
-              />
+            {/* Badge Card — auto-scaled to fit fully inside the modal */}
+            <div
+              id="printable-badge-area"
+              className="w-full flex justify-center items-center"
+              style={{ height: BADGE_HEIGHT * badgeScale }}
+            >
+              <div
+                ref={badgeScalerRef}
+                style={{ transform: `scale(${badgeScale})`, transformOrigin: 'center center' }}
+              >
+                <BadgeCard
+                  employee={selectedBadgeEmployee}
+                  id="modal-badge-preview"
+                />
+              </div>
             </div>
 
             {/* Modal Actions */}

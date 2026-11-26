@@ -119,7 +119,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
         <div className="my-2 p-2 bg-white rounded-xl shadow-md border border-slate-300 flex items-center justify-center">
           <QRCodeSVG
             value={qrValue}
-            size={116}
+            size={150}
             level="H"
             marginSize={4}
             fgColor="#0d0f12"
