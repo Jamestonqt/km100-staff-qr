@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Database,
@@ -19,13 +19,34 @@ interface SetupModalProps {
 export const SetupModal: React.FC<SetupModalProps> = ({ isOpen, onClose, onResetData }) => {
   const [copiedEnv, setCopiedEnv] = useState(false);
   const [copiedSQL, setCopiedSQL] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape key press
+  // Close on Escape key press and trap focus
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -80,11 +101,10 @@ CREATE TABLE IF NOT EXISTS scan_logs (
   };
 
   const handleReset = () => {
-    if (window.confirm('Reset all demo staff and scan logs back to initial KM100 seeds?')) {
-      portalService.resetDemoData();
-      onResetData();
-      onClose();
-    }
+    portalService.resetDemoData();
+    onResetData();
+    setConfirmingReset(false);
+    onClose();
   };
 
   return (
@@ -94,7 +114,10 @@ CREATE TABLE IF NOT EXISTS scan_logs (
       aria-labelledby="setup-modal-title"
       className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto transition-colors">
+      <div
+        ref={modalRef}
+        className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto transition-colors"
+      >
         <button
           onClick={onClose}
           aria-label="Close database setup modal"
@@ -179,18 +202,41 @@ CREATE TABLE IF NOT EXISTS scan_logs (
           </div>
 
           {/* Reset Demo Sandbox button */}
-          <div className="pt-2 flex items-center justify-between">
-            <button
-              onClick={handleReset}
-              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-none text-xs font-semibold transition-colors cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
-              <span>Reset Demo Staff &amp; Logs</span>
-            </button>
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+            {confirmingReset ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
+                  Reset to initial demo seeds?
+                </span>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Yes, Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(false)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-[#222730] text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingReset(true)}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3340] dark:text-slate-300 dark:border-none text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
+                <span>Reset Demo Staff &amp; Logs</span>
+              </button>
+            )}
 
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-xs font-bold text-white shadow-md transition-colors cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-xs font-bold text-white shadow-md transition-colors cursor-pointer ml-auto"
             >
               Close
             </button>

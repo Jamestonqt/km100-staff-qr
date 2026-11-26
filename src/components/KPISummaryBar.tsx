@@ -31,7 +31,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <Users className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
           KM100 verified credentials
         </div>
       </div>
@@ -51,7 +51,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <Building2 className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
+        <div className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse motion-reduce:animate-none" />
           Inside campus facilities
         </div>
@@ -72,7 +72,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <LogIn className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
           Valid time-in gate scans
         </div>
       </div>
@@ -92,7 +92,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <ShieldAlert className="w-5 h-5" />
           </div>
         </div>
-        <div className="mt-2 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+        <div className="mt-2 text-[11px] text-rose-700 dark:text-rose-400 font-medium">
           Blocked or unauthorized scans
         </div>
       </div>

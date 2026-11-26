@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Html5Qrcode,
-  Html5QrcodeSupportedFormats,
-  type Html5QrcodeCameraScanConfig,
+import type {
+  Html5Qrcode as Html5QrcodeInstance,
+  Html5QrcodeCameraScanConfig,
 } from 'html5-qrcode';
 import confetti from 'canvas-confetti';
 import {
@@ -50,7 +49,7 @@ type BannerTone = 'green' | 'teal' | 'amber' | 'red';
 const BANNER_BG: Record<BannerTone, string> = {
   green: 'bg-emerald-600 text-white',
   teal: 'bg-teal-600 text-white',
-  amber: 'bg-amber-600 text-white',
+  amber: 'bg-amber-400 text-slate-950',
   red: 'bg-rose-600 text-white',
 };
 
@@ -126,7 +125,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
   // Anti-passback / cooldown: map of code -> timestamp (ms)
   const cooldownRef = useRef<Map<string, number>>(new Map());
-  const scannerInstanceRef = useRef<Html5Qrcode | null>(null);
+  const scannerInstanceRef = useRef<Html5QrcodeInstance | null>(null);
   const isProcessingScanRef = useRef<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,7 +150,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
   // Populate cameras
   useEffect(() => {
-    Html5Qrcode.getCameras()
+    import('html5-qrcode')
+      .then(({ Html5Qrcode }) => Html5Qrcode.getCameras())
       .then((devices) => {
         if (devices && devices.length > 0) {
           const list = devices.map((d) => ({ id: d.id, label: d.label || `Camera ${d.id.substring(0, 5)}` }));
@@ -530,6 +530,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
     }
 
     try {
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
       const scanner = new Html5Qrcode('qr-reader-container', {
         // Skip 1D barcode decoding entirely — only QR codes are valid badges.
         formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -616,6 +617,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
       // Re-query camera devices now that permissions have been granted
       try {
+        const { Html5Qrcode } = await import('html5-qrcode');
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length > 0) {
           const list = devices.map((d) => ({
@@ -691,6 +693,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       setCameraError(null);
 
       // Create a temporary scanner instance if one is not running
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
       let scanner = scannerInstanceRef.current;
       let shouldClean = false;
       if (!scanner) {
@@ -812,6 +815,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             type="file"
             accept="image/*"
             capture="environment"
+            aria-label="Upload QR badge image or snap photo"
             onChange={handleFileUpload}
             className="hidden"
             id="badge-photo-upload"
@@ -1018,12 +1022,19 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         <div className="lg:col-span-5 space-y-4">
           {/* High-Visibility Verification Result Card */}
           <div
+            role="region"
+            aria-label="Access Verification Status"
             className={`border rounded-2xl p-5 shadow-sm transition-all ${
               !lastResult || !bannerTone
                 ? 'bg-white border-slate-200 dark:bg-[#16191e] dark:border-[#222730]'
                 : `bg-white dark:bg-[#16191e] ${BANNER_BORDER[bannerTone]}`
             }`}
           >
+            {/* Screen reader live announcement */}
+            <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {lastResult ? `${bannerTitle}: ${lastResult.message}` : 'Scanner is on standby'}
+            </div>
+
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#222730]">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Access Verification Status
@@ -1051,7 +1062,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                       <LogOut className="w-8 h-8 shrink-0 text-white" />
                     )
                   ) : bannerTone === 'amber' ? (
-                    <AlertTriangle className="w-8 h-8 shrink-0 text-white" />
+                    <AlertTriangle className="w-8 h-8 shrink-0 text-slate-950" />
                   ) : (
                     <ShieldAlert className="w-8 h-8 shrink-0 text-white" />
                   )}
@@ -1059,7 +1070,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                     <h2 className="text-base font-black tracking-wide leading-tight uppercase">
                       {bannerTitle}
                     </h2>
-                    <p className="text-xs font-semibold opacity-95 leading-tight mt-0.5">
+                    <p className={`text-xs font-semibold leading-tight mt-0.5 ${bannerTone === 'amber' ? 'text-slate-950 opacity-90' : 'text-white opacity-95'}`}>
                       {lastResult.message}
                     </p>
                   </div>
@@ -1163,7 +1174,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                       >
                         {isLogin ? 'LOGIN' : 'LOGOUT'}
                       </span>
-                      <div className="text-[9px] text-slate-500 font-mono mt-0.5">
+                      <div className="text-[9px] text-slate-600 dark:text-slate-400 font-mono mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',

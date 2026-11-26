@@ -50,11 +50,15 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
   // Modals state
   const [selectedBadgeEmployee, setSelectedBadgeEmployee] = useState<Employee | null>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [confirmDeleteEmployee, setConfirmDeleteEmployee] = useState<Employee | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [badgeScale, setBadgeScale] = useState<number>(1);
   const badgeScalerRef = useRef<HTMLDivElement>(null);
+  const badgeModalRef = useRef<HTMLDivElement>(null);
+  const editModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
 
   // Keep the badge scaled to fit the modal as the window resizes.
   useEffect(() => {
@@ -65,18 +69,43 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     return () => window.removeEventListener('resize', update);
   }, [selectedBadgeEmployee]);
 
-  // Close modals on Escape key press
+  // Close modals on Escape key press and trap focus
   useEffect(() => {
-    if (!selectedBadgeEmployee && !editingEmployee) return;
+    const isAnyModalOpen = selectedBadgeEmployee || editingEmployee || confirmDeleteEmployee;
+    if (!isAnyModalOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (selectedBadgeEmployee) setSelectedBadgeEmployee(null);
         if (editingEmployee) setEditingEmployee(null);
+        if (confirmDeleteEmployee) setConfirmDeleteEmployee(null);
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const activeModal = badgeModalRef.current || editModalRef.current || deleteModalRef.current;
+        if (!activeModal) return;
+
+        const focusables = activeModal.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedBadgeEmployee, editingEmployee]);
+  }, [selectedBadgeEmployee, editingEmployee, confirmDeleteEmployee]);
 
   // Derive on-site status from the most recent valid scan per employee:
   // CHECK_IN => On-Site, CHECK_OUT => Off-Site
@@ -122,18 +151,17 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     }
   };
 
-  // Handle Delete
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this staff record and revoke their badge?')) {
-      return;
-    }
+  // Handle Delete Confirmation Execution
+  const handleExecuteDelete = async () => {
+    if (!confirmDeleteEmployee) return;
+    const id = confirmDeleteEmployee.id;
     setDeletingId(id);
     try {
       await portalService.deleteEmployee(id);
+      setConfirmDeleteEmployee(null);
       onEmployeeUpdated();
     } catch (err) {
       console.error('Failed to delete staff:', err);
-      alert('Failed to delete staff');
     } finally {
       setDeletingId(null);
     }
@@ -266,6 +294,9 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                             <img
                               src={emp.photo_url}
                               alt={emp.full_name}
+                              width={40}
+                              height={40}
+                              loading="lazy"
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLElement).style.display = 'none';
@@ -354,7 +385,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                         </button>
 
                         <button
-                          onClick={() => handleDelete(emp.id)}
+                          onClick={() => setConfirmDeleteEmployee(emp)}
                           disabled={deletingId === emp.id}
                           title="Delete Staff"
                           aria-label={`Delete staff record for ${emp.full_name}`}
@@ -398,6 +429,9 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                     <img
                       src={emp.photo_url}
                       alt={emp.full_name}
+                      width={44}
+                      height={44}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
@@ -476,7 +510,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(emp.id)}
+                        onClick={() => setConfirmDeleteEmployee(emp)}
                         disabled={deletingId === emp.id}
                         title="Delete Staff"
                         aria-label={`Delete staff record for ${emp.full_name}`}
@@ -507,7 +541,10 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
           aria-labelledby="badge-modal-title"
           className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4"
         >
-          <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col items-center transition-colors">
+          <div
+            ref={badgeModalRef}
+            className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col items-center transition-colors"
+          >
             <button
               onClick={() => setSelectedBadgeEmployee(null)}
               aria-label="Close dialog"
@@ -572,7 +609,10 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
           aria-labelledby="edit-modal-title"
           className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4"
         >
-          <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative transition-colors">
+          <div
+            ref={editModalRef}
+            className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative transition-colors"
+          >
             <button
               onClick={() => setEditingEmployee(null)}
               aria-label="Close edit staff dialog"
@@ -684,10 +724,11 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label htmlFor="edit-photo-url" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Photo URL
                 </label>
                 <input
+                  id="edit-photo-url"
                   type="url"
                   value={editingEmployee.photo_url || ''}
                   onChange={(e) =>
@@ -719,6 +760,46 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Staff Confirmation Modal */}
+      {confirmDeleteEmployee && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-desc"
+          className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#0d0f12]/80 backdrop-blur-sm flex items-center justify-center p-4"
+        >
+          <div
+            ref={deleteModalRef}
+            className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-3xl p-6 max-w-sm w-full shadow-2xl relative transition-colors"
+          >
+            <h3 id="delete-dialog-title" className="text-sm font-black text-slate-900 dark:text-white mb-2 uppercase tracking-wider">
+              Revoke &amp; Delete Credential
+            </h3>
+            <p id="delete-dialog-desc" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-5">
+              Are you sure you want to permanently delete <strong className="text-slate-900 dark:text-white font-bold">{confirmDeleteEmployee.full_name}</strong> (<span className="font-mono text-orange-600 dark:text-orange-400 font-bold">{confirmDeleteEmployee.employee_code}</span>)? Their badge will be immediately invalidated and cannot be scanned at gate kiosks.
+            </p>
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteEmployee(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#222730] dark:hover:bg-[#2c3342] text-xs font-semibold dark:text-slate-300 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDelete}
+                disabled={deletingId === confirmDeleteEmployee.id}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow-md disabled:opacity-50 cursor-pointer"
+              >
+                {deletingId === confirmDeleteEmployee.id ? 'Deleting...' : 'Revoke & Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

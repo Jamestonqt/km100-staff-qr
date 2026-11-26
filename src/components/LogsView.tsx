@@ -17,6 +17,53 @@ interface LogsViewProps {
   logs: ScanLog[];
 }
 
+function filterLogsList(
+  logs: ScanLog[],
+  searchTerm: string,
+  scanTypeFilter: string,
+  statusFilter: string,
+  dateFilter: string,
+  specificDate: string
+): ScanLog[] {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const yesterdayStart = todayStart - 86400000;
+
+  return logs.filter((log) => {
+    // Search
+    const matchSearch =
+      log.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Type
+    const matchType = scanTypeFilter === 'ALL' || log.scan_type === scanTypeFilter;
+
+    // Status
+    const matchStatus =
+      statusFilter === 'ALL'
+        ? true
+        : statusFilter === 'VALID'
+        ? log.verification_status === 'VALID'
+        : log.verification_status !== 'VALID';
+
+    // Date
+    let matchDate = true;
+    const logTime = new Date(log.scanned_at).getTime();
+    if (specificDate) {
+      const [y, m, d] = specificDate.split('-').map(Number);
+      const selectedStart = new Date(y, m - 1, d).getTime();
+      const selectedEnd = new Date(y, m - 1, d + 1).getTime();
+      matchDate = logTime >= selectedStart && logTime < selectedEnd;
+    } else if (dateFilter === 'TODAY') {
+      matchDate = logTime >= todayStart;
+    } else if (dateFilter === 'YESTERDAY') {
+      matchDate = logTime >= yesterdayStart && logTime < todayStart;
+    }
+
+    return matchSearch && matchType && matchStatus && matchDate;
+  });
+}
+
 export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [scanTypeFilter, setScanTypeFilter] = useState<string>('ALL');
@@ -63,45 +110,10 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
     : 'All Dates';
 
   // Filter logs
-  const filteredLogs = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const yesterdayStart = todayStart - 86400000;
-
-    return logs.filter((log) => {
-      // Search
-      const matchSearch =
-        log.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
-
-      // Type
-      const matchType = scanTypeFilter === 'ALL' || log.scan_type === scanTypeFilter;
-
-      // Status
-      const matchStatus =
-        statusFilter === 'ALL'
-          ? true
-          : statusFilter === 'VALID'
-          ? log.verification_status === 'VALID'
-          : log.verification_status !== 'VALID';
-
-      // Date
-      let matchDate = true;
-      const logTime = new Date(log.scanned_at).getTime();
-      if (specificDate) {
-        const [y, m, d] = specificDate.split('-').map(Number);
-        const selectedStart = new Date(y, m - 1, d).getTime();
-        const selectedEnd = new Date(y, m - 1, d + 1).getTime();
-        matchDate = logTime >= selectedStart && logTime < selectedEnd;
-      } else if (dateFilter === 'TODAY') {
-        matchDate = logTime >= todayStart;
-      } else if (dateFilter === 'YESTERDAY') {
-        matchDate = logTime >= yesterdayStart && logTime < todayStart;
-      }
-
-      return matchSearch && matchType && matchStatus && matchDate;
-    });
-  }, [logs, searchTerm, scanTypeFilter, statusFilter, dateFilter, specificDate]);
+  const filteredLogs = useMemo(
+    () => filterLogsList(logs, searchTerm, scanTypeFilter, statusFilter, dateFilter, specificDate),
+    [logs, searchTerm, scanTypeFilter, statusFilter, dateFilter, specificDate]
+  );
 
   // Export to CSV
   const handleExportCSV = () => {

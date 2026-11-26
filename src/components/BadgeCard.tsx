@@ -70,6 +70,9 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
               <img
                 src={employee.photo_url}
                 alt={employee.full_name}
+                width={96}
+                height={96}
+                loading="lazy"
                 className="w-full h-full rounded-full object-cover bg-[#0d0f12]"
                 crossOrigin="anonymous"
                 onError={(e) => {

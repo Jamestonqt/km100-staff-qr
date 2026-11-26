@@ -12,6 +12,20 @@ import { soundManager } from './utils/audio';
 import { getInitialTheme, applyTheme, type Theme } from './utils/theme';
 import { getCurrentlyOnSiteCount } from './utils/presence';
 
+function computeAdmissionsSummary(logs: ScanLog[]) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const todayStart = d.getTime();
+  let checkIns = 0;
+  let denied = 0;
+  for (const log of logs) {
+    if (new Date(log.scanned_at).getTime() < todayStart) continue;
+    if (log.scan_type === 'CHECK_IN' && log.verification_status === 'VALID') checkIns++;
+    if (log.verification_status !== 'VALID' && log.verification_status !== 'DUPLICATE_SCAN') denied++;
+  }
+  return { admissionsToday: checkIns, deniedToday: denied };
+}
+
 export function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [activeTab, setActiveTab] = useState<ActiveTab>('scanner');
@@ -25,18 +39,10 @@ export function App() {
     [logs, employees]
   );
 
-  const { admissionsToday, deniedToday } = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    let checkIns = 0;
-    let denied = 0;
-    for (const log of logs) {
-      if (new Date(log.scanned_at).getTime() < todayStart) continue;
-      if (log.scan_type === 'CHECK_IN' && log.verification_status === 'VALID') checkIns++;
-      if (log.verification_status !== 'VALID' && log.verification_status !== 'DUPLICATE_SCAN') denied++;
-    }
-    return { admissionsToday: checkIns, deniedToday: denied };
-  }, [logs]);
+  const { admissionsToday, deniedToday } = useMemo(
+    () => computeAdmissionsSummary(logs),
+    [logs]
+  );
 
   // Apply theme class to <html> on theme state changes
   useEffect(() => {
@@ -48,7 +54,29 @@ export function App() {
   };
 
   // Load all data
-  const loadData = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true;
+    const fetchData = async () => {
+      try {
+        const [empList, logList] = await Promise.all([
+          portalService.getEmployees(),
+          portalService.getScanLogs(),
+        ]);
+        if (isMounted) {
+          setEmployees(empList);
+          setLogs(logList);
+        }
+      } catch (err) {
+        console.error('Failed to load portal data:', err);
+      }
+    };
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const reloadData = useCallback(async () => {
     try {
       const [empList, logList] = await Promise.all([
         portalService.getEmployees(),
@@ -57,23 +85,19 @@ export function App() {
       setEmployees(empList);
       setLogs(logList);
     } catch (err) {
-      console.error('Failed to load portal data:', err);
+      console.error('Failed to reload portal data:', err);
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
   // Keep the live feed and on-site count in sync with Supabase Realtime
   useEffect(() => {
-    const unsubscribeEmployees = portalService.subscribeToEmployees(loadData);
-    const unsubscribeLogs = portalService.subscribeToScanLogs(loadData);
+    const unsubscribeEmployees = portalService.subscribeToEmployees(reloadData);
+    const unsubscribeLogs = portalService.subscribeToScanLogs(reloadData);
     return () => {
       unsubscribeEmployees();
       unsubscribeLogs();
     };
-  }, [loadData]);
+  }, [reloadData]);
 
   // Audio mute toggle
   const handleToggleMute = () => {
@@ -85,12 +109,12 @@ export function App() {
     if (log) {
       setLogs((prev) => [log, ...prev.filter((l) => l.id !== log.id)]);
     }
-    loadData();
+    reloadData();
   };
 
   const handleEmployeeCreated = (newEmp: Employee) => {
     setEmployees((prev) => [...prev, newEmp]);
-    loadData();
+    reloadData();
   };
 
   return (
@@ -109,6 +133,8 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <h1 className="sr-only">KM100 Skills &amp; Training Center — Staff Access &amp; Gate Verification Portal</h1>
+
         {/* Real-time KPI Metric Cards */}
         <KPISummaryBar
           activePersonnel={employees.filter((e) => e.status === 'Active').length}
@@ -136,7 +162,7 @@ export function App() {
           <DirectoryView
             employees={employees}
             logs={logs}
-            onEmployeeUpdated={loadData}
+            onEmployeeUpdated={reloadData}
           />
         )}
 
@@ -147,12 +173,12 @@ export function App() {
       <footer className="border-t border-slate-200 bg-white dark:border-[#222730] dark:bg-[#0d0f12] py-4 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div>
-            <span className="font-semibold text-orange-600 dark:text-orange-500">KM100 Skills &amp; Training Center, Inc.</span> • Staff Access &amp; Attendance Portal
+            <span className="font-semibold text-orange-700 dark:text-orange-400">KM100 Skills &amp; Training Center, Inc.</span> • Staff Access &amp; Attendance Portal
           </div>
           <div className="flex items-center space-x-3 text-[11px]">
             <button
               onClick={() => setIsSetupModalOpen(true)}
-              className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:underline cursor-pointer"
+              className="text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 hover:underline cursor-pointer font-medium"
             >
               Supabase Configuration
             </button>
@@ -166,7 +192,7 @@ export function App() {
       <SetupModal
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
-        onResetData={loadData}
+        onResetData={reloadData}
       />
     </div>
   );

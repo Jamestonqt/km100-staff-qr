@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Download,
   Printer,
@@ -46,7 +46,14 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
   onEmployeeCreated,
   existingEmployees,
 }) => {
-  const [employeeCode, setEmployeeCode] = useState<string>('');
+  const defaultNextCode = useMemo(() => {
+    const codes = existingEmployees.map((e) => e.employee_code);
+    return getNextEmployeeCode(codes);
+  }, [existingEmployees]);
+
+  const [customEmployeeCode, setCustomEmployeeCode] = useState<string | null>(null);
+  const employeeCode = customEmployeeCode ?? defaultNextCode;
+
   const [fullName, setFullName] = useState<string>('');
   const [role, setRole] = useState<string>('Technical Vocational Trainer');
   const [department, setDepartment] = useState<string>('Technical & Vocational Training');
@@ -57,13 +64,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
-
-  // Initialize employee code with next sequential
-  useEffect(() => {
-    const codes = existingEmployees.map((e) => e.employee_code);
-    const nextCode = getNextEmployeeCode(codes);
-    setEmployeeCode(nextCode);
-  }, [existingEmployees]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Memoized preview employee object
   const previewEmployee: Employee = useMemo(() => ({
@@ -90,6 +91,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     if (!fullName.trim() || !employeeCode.trim()) return;
 
     setIsSaving(true);
+    setErrorMessage(null);
     try {
       const qrToken = generateQRToken(employeeCode);
       const created = await portalService.createEmployee({
@@ -109,8 +111,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       setTimeout(() => setSaveSuccess(false), 3000);
 
       // Reset for next employee
-      const updatedCodes = [...existingEmployees.map((e) => e.employee_code), created.employee_code];
-      setEmployeeCode(getNextEmployeeCode(updatedCodes));
+      setCustomEmployeeCode(null);
       setFullName('');
     } catch (err) {
       console.error('Failed to create staff:', err);
@@ -120,7 +121,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
         : errRecord?.message
         ? String(errRecord.message)
         : 'Please try again.';
-      alert(`Error creating staff badge: ${message}`);
+      setErrorMessage(`Error creating staff badge: ${message}`);
     } finally {
       setIsSaving(false);
     }
@@ -220,7 +221,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                   type="text"
                   required
                   value={employeeCode}
-                  onChange={(e) => setEmployeeCode(e.target.value.toUpperCase())}
+                  onChange={(e) => setCustomEmployeeCode(e.target.value.toUpperCase())}
                   placeholder="KM100-006"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
                 />
@@ -228,11 +229,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
                   type="button"
                   title="Generate next sequential code"
                   aria-label="Generate next sequential employee code"
-                  onClick={() => {
-                    const codes = existingEmployees.map((e) => e.employee_code);
-                    setEmployeeCode(getNextEmployeeCode(codes));
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 min-h-[32px] min-w-[32px] flex items-center justify-center text-slate-400 hover:text-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 rounded-lg cursor-pointer"
+                  onClick={() => setCustomEmployeeCode(null)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 rounded-lg cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
@@ -287,16 +285,16 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               placeholder="e.g. Technical Vocational Trainer"
               className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
             />
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {COMMON_ROLES.map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setRole(r)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer ${
+                  className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
                     role === r
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white'
+                      ? 'bg-orange-600 text-white shadow-sm'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#222730] dark:text-slate-300 dark:hover:text-white'
                   }`}
                 >
                   {r}
@@ -393,12 +391,18 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
             </button>
 
             {saveSuccess && (
-              <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-orange-600 dark:text-orange-400 font-bold animate-fade-in">
+              <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold animate-fade-in">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Badge Registered &amp; Verified!</span>
               </div>
             )}
           </div>
+
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 dark:bg-rose-950/70 dark:border-rose-500/50 dark:text-rose-300 text-xs font-medium">
+              {errorMessage}
+            </div>
+          )}
         </form>
       </div>
 
