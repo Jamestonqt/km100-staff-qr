@@ -121,7 +121,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
             value={qrValue}
             size={116}
             level="H"
-            includeMargin={false}
+            marginSize={4}
             fgColor="#0d0f12"
             bgColor="#ffffff"
           />

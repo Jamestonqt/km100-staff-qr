@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Html5Qrcode, type Html5QrcodeCameraScanConfig } from 'html5-qrcode';
+import {
+  Html5Qrcode,
+  Html5QrcodeSupportedFormats,
+  type Html5QrcodeCameraScanConfig,
+} from 'html5-qrcode';
 import confetti from 'canvas-confetti';
 import {
   Camera,
@@ -523,19 +527,30 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
     }
 
     try {
-      const scanner = new Html5Qrcode('qr-reader-container');
+      const scanner = new Html5Qrcode('qr-reader-container', {
+        // Skip 1D barcode decoding entirely — only QR codes are valid badges.
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+        useBarCodeDetectorIfSupported: true,
+        verbose: false,
+      });
       scannerInstanceRef.current = scanner;
 
-      // Responsive qrbox calculation to prevent OverconstrainedError on small screens
+      // Responsive qrbox: 70% of the smaller viewfinder edge so badges are easy
+      // to align, clamped to a sensible minimum for tiny mobile viewports.
       const qrboxFunction = (viewfinderWidth: number, viewfinderHeight: number) => {
         const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-        const edge = Math.max(Math.floor(minEdge * 0.72), 160);
+        const edge = Math.max(Math.floor(minEdge * 0.7), 220);
         return { width: edge, height: edge };
       };
 
       const config: Html5QrcodeCameraScanConfig = {
         fps: 15,
         qrbox: qrboxFunction,
+        // Request HD video for sharper QR module edges on USB and mobile cameras.
+        videoConstraints: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       };
 
       // Multi-tier camera initialization:
@@ -647,7 +662,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       let scanner = scannerInstanceRef.current;
       let shouldClean = false;
       if (!scanner) {
-        scanner = new Html5Qrcode('qr-reader-container');
+        scanner = new Html5Qrcode('qr-reader-container', {
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+        });
         shouldClean = true;
       }
 
