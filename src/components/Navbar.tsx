@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
           {/* Brand & Official Logo */}
           <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
               <img
                 src="/km100-logo.png"
                 alt="KM100 Skills and Training Center Logo"
