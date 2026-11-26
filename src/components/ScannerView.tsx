@@ -1081,6 +1081,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
               {recentLogs.slice(0, 5).map((log) => {
                 const isValid = log.verification_status === 'VALID';
+                const attendanceType = log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out';
+                const isTimeIn = attendanceType.toLowerCase().replace('_', ' ') === 'time in';
                 return (
                   <div
                     key={log.id}
@@ -1104,13 +1106,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
                     <div className="text-right shrink-0">
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black ${
-                          log.scan_type === 'CHECK_IN'
-                            ? 'bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30'
-                            : 'bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
+                        className={`px-2 py-0.5 rounded text-[9px] font-black border ${
+                          isTimeIn
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-blue-50 text-blue-700 border border-blue-200'
                         }`}
                       >
-                        {log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out'}
+                        {isTimeIn ? 'Time In' : 'Time Out'}
                       </span>
                       <div className="text-[9px] text-slate-500 font-mono mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {
