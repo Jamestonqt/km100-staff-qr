@@ -4,11 +4,18 @@ import { Users, Building2, LogIn, ShieldAlert } from 'lucide-react';
 interface KPISummaryBarProps {
   activePersonnel: number;
   currentlyOnSite: number;
+  admissionsToday: number;
+  deniedToday: number;
 }
 
-export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ activePersonnel, currentlyOnSite }) => {
+export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
+  activePersonnel,
+  currentlyOnSite,
+  admissionsToday,
+  deniedToday,
+}) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 mb-6">
       {/* Total Active Personnel */}
       <div className="bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-xl p-4 shadow-sm hover:border-slate-300 dark:hover:border-[#323946] transition-colors">
         <div className="flex items-center justify-between">
@@ -57,6 +64,9 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ activePersonnel, c
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Admissions Today
             </p>
+            <h3 className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">
+              {admissionsToday}
+            </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
             <LogIn className="w-5 h-5" />
@@ -74,6 +84,9 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({ activePersonnel, c
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Denied / Flagged
             </p>
+            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
+              {deniedToday}
+            </h3>
           </div>
           <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
             <ShieldAlert className="w-5 h-5" />

@@ -40,24 +40,24 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 dark:border-[#222730] dark:bg-[#12151a]/95 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
           {/* Brand & Official Logo */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden bg-white p-0.5 border-2 border-orange-500 shadow-md shrink-0 flex items-center justify-center">
+          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
               <img
                 src="/km100-logo.png"
                 alt="KM100 Skills and Training Center Logo"
                 className="w-full h-full object-contain rounded-full"
               />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
+            <div className="min-w-0">
+              <div className="flex items-center space-x-2 min-w-0">
                 <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">KM100</span>
-                <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded font-extrabold bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-600/20 dark:text-orange-400 dark:border-orange-500/30 uppercase tracking-wider">
+                <span className="hidden sm:inline text-[10px] sm:text-[11px] px-2 py-0.5 rounded font-extrabold bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-600/20 dark:text-orange-400 dark:border-orange-500/30 uppercase tracking-wider">
                   Access Portal
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 tracking-wide uppercase line-clamp-1">
+              <p className="text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 tracking-wide uppercase truncate">
                 Skills &amp; Training Center, Inc.
               </p>
             </div>
@@ -119,7 +119,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Right Controls: Database status + Theme toggle + Sound toggle */}
-          <div className="flex items-center space-x-2 sm:space-x-2.5">
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
             {/* Supabase status indicator */}
             <button
               onClick={onOpenSetupModal}

@@ -5,7 +5,6 @@ import {
   Camera,
   CameraOff,
   Flashlight,
-  ShieldCheck,
   ShieldAlert,
   LogIn,
   LogOut,
@@ -42,6 +41,67 @@ interface VerificationResult {
 
 type ScanResultStatus = VerificationStatus | 'ALREADY_ON_SITE' | 'NOT_ON_SITE';
 
+type BannerTone = 'green' | 'teal' | 'amber' | 'red';
+
+const BANNER_BG: Record<BannerTone, string> = {
+  green: 'bg-emerald-600 text-white',
+  teal: 'bg-teal-600 text-white',
+  amber: 'bg-amber-600 text-white',
+  red: 'bg-rose-600 text-white',
+};
+
+const BANNER_BORDER: Record<BannerTone, string> = {
+  green: 'border-emerald-500 dark:border-emerald-500/80',
+  teal: 'border-teal-500 dark:border-teal-500/80',
+  amber: 'border-amber-500 dark:border-amber-500/80',
+  red: 'border-rose-500 dark:border-rose-500/80',
+};
+
+function getBannerTitle(status: ScanResultStatus, scanType: ScanType): string {
+  if (status === 'VALID') {
+    return scanType === 'CHECK_IN' ? 'TIME IN RECORDED' : 'TIME OUT RECORDED';
+  }
+  if (status === 'ALREADY_ON_SITE') return 'ALREADY ON-SITE';
+  if (status === 'NOT_ON_SITE') return 'NOT ON-SITE';
+  if (status === 'DUPLICATE_SCAN') return 'PLEASE WAIT';
+  return 'ACCESS DENIED';
+}
+
+function getBannerTone(status: ScanResultStatus, scanType: ScanType): BannerTone {
+  if (status === 'VALID') {
+    return scanType === 'CHECK_IN' ? 'green' : 'teal';
+  }
+  if (status === 'ALREADY_ON_SITE' || status === 'NOT_ON_SITE' || status === 'DUPLICATE_SCAN') {
+    return 'amber';
+  }
+  return 'red';
+}
+
+/**
+ * Finds the original Time In for the current on-site session: the earliest
+ * valid Time In that happened after the most recent Time Out. Duplicate
+ * "already on-site" Time In scans are ignored so the real initial time is shown.
+ */
+function getSessionCheckInTime(logs: ScanLog[], code: string): string | null {
+  const target = code.toUpperCase();
+  const relevant = logs
+    .filter(
+      (l) => l.verification_status === 'VALID' && l.employee_code.toUpperCase() === target
+    )
+    .sort((a, b) => new Date(a.scanned_at).getTime() - new Date(b.scanned_at).getTime());
+
+  let lastCheckOutIdx = -1;
+  for (let i = 0; i < relevant.length; i++) {
+    if (relevant[i].scan_type === 'CHECK_OUT') lastCheckOutIdx = i;
+  }
+  for (let i = lastCheckOutIdx + 1; i < relevant.length; i++) {
+    if (relevant[i].scan_type === 'CHECK_IN') {
+      return new Date(relevant[i].scanned_at).toLocaleTimeString();
+    }
+  }
+  return null;
+}
+
 export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recentLogs }) => {
   // Scanner Controls
   const [scanType, setScanType] = useState<ScanType>('CHECK_IN');
@@ -72,6 +132,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
   useEffect(() => {
     scanModeRef.current = scanType;
   }, [scanType]);
+
+  // Live ref to the activity feed so the "already on-site" banner can report
+  // the original Time In without adding a dependency to the verify callback.
+  const recentLogsRef = useRef<ScanLog[]>(recentLogs);
+  useEffect(() => {
+    recentLogsRef.current = recentLogs;
+  }, [recentLogs]);
 
   const handleScanTypeChange = (next: ScanType) => {
     scanModeRef.current = next;
@@ -122,6 +189,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       const parsed = parseQRPayload(rawCodeOrJson);
       const codeToVerify = parsed.code || 'UNKNOWN';
       const now = Date.now();
+      const formattedTime = new Date().toLocaleTimeString();
 
       // Anti-Passback Cooldown Check (10 seconds)
       const lastScannedTime = cooldownRef.current.get(codeToVerify);
@@ -131,9 +199,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'DUPLICATE_SCAN',
-          message: `ANTI-PASSBACK COOLDOWN: Badge ${codeToVerify} was scanned ${10 - remainingSec}s ago. Please wait ${remainingSec}s.`,
+          message: `Badge ${codeToVerify} was just scanned. Please wait ${remainingSec}s before scanning again.`,
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           scannedCode: codeToVerify,
         });
 
@@ -159,9 +227,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'INVALID_QR',
-          message: parsed.error || 'INVALID BADGE: Not a KM100 verified access credential.',
+          message: 'Invalid or inactive QR badge. Please verify with HR / Admin.',
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           scannedCode: codeToVerify,
         });
 
@@ -190,9 +258,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'INVALID_QR',
-          message: `UNREGISTERED STAFF: Code ${codeToVerify} not found in KM100 records.`,
+          message: 'Invalid or inactive QR badge. Please verify with HR / Admin.',
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           scannedCode: codeToVerify,
         });
 
@@ -219,9 +287,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'INVALID_QR',
-          message: 'SECURITY HASH MISMATCH: Badge token is invalid or revoked.',
+          message: 'Invalid or inactive QR badge. Please verify with HR / Admin.',
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           employee,
           scannedCode: employee.employee_code,
         });
@@ -249,9 +317,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'INACTIVE_STAFF',
-          message: `ACCESS DENIED: Staff account status is "${employee.status.toUpperCase()}". Access blocked.`,
+          message: 'Invalid or inactive QR badge. Please verify with HR / Admin.',
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           employee,
           scannedCode: employee.employee_code,
         });
@@ -280,9 +348,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'ALREADY_ON_SITE',
-          message: `ALREADY TIMED IN: ${employee.full_name} is already on-site. The on-site count was not increased.`,
+          message: `${employee.full_name} already timed in at ${getSessionCheckInTime(recentLogsRef.current, employee.employee_code) ?? 'earlier today'}. Switch to Time Out to sign out.`,
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           employee,
           scannedCode: employee.employee_code,
         });
@@ -310,9 +378,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
         setLastResult({
           status: 'NOT_ON_SITE',
-          message: `NOT ON-SITE: ${employee.full_name} is not currently on-site. The on-site count was not decreased.`,
+          message: `${employee.full_name} has no active Time In today. Please scan Time In first.`,
           scanType: currentScanType,
-          timestamp: new Date().toLocaleTimeString(),
+          timestamp: formattedTime,
           employee,
           scannedCode: employee.employee_code,
         });
@@ -353,9 +421,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
       setLastResult({
         status: 'VALID',
-        message: `ACCESS GRANTED: ${employee.full_name} (${currentScanType === 'CHECK_IN' ? 'TIME IN' : 'TIME OUT'})`,
+        message:
+          currentScanType === 'CHECK_IN'
+            ? `Welcome, ${employee.full_name} — Time In logged at ${formattedTime}.`
+            : `Goodbye, ${employee.full_name} — Time Out logged at ${formattedTime}.`,
         scanType: currentScanType,
-        timestamp: new Date().toLocaleTimeString(),
+        timestamp: formattedTime,
         employee,
         scannedCode: employee.employee_code,
       });
@@ -591,7 +662,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       soundManager.playDeniedBuzzer();
       setLastResult({
         status: 'INVALID_QR',
-        message: 'No valid KM100 QR code detected in the uploaded image. Please ensure the QR is clear and well-lit.',
+        message: 'Invalid or inactive QR badge. Please verify with HR / Admin.',
         scanType: scanModeRef.current,
         timestamp: new Date().toLocaleTimeString(),
         scannedCode: 'FILE_UPLOAD',
@@ -625,6 +696,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
     setManualCode('');
   };
 
+  const bannerTone = lastResult
+    ? getBannerTone(lastResult.status, lastResult.scanType)
+    : null;
+  const bannerTitle = lastResult
+    ? getBannerTitle(lastResult.status, lastResult.scanType)
+    : '';
+
   return (
     <div className="space-y-6">
         {/* Top Scanner Controls */}
@@ -633,7 +711,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         <div className="flex items-center w-full md:w-auto bg-slate-100 dark:bg-[#0d0f12] p-1.5 rounded-xl border border-slate-200 dark:border-[#222730] transition-colors">
           <button
             onClick={() => handleScanTypeChange('CHECK_IN')}
-            aria-label="Set scan mode to TIME IN"
+            aria-label="Set scan mode to Time In"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
               scanType === 'CHECK_IN'
                 ? 'bg-orange-600 text-white shadow-sm'
@@ -641,12 +719,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogIn className="w-4 h-4" />
-            <span>TIME IN</span>
+            <span>Time In</span>
           </button>
 
           <button
             onClick={() => handleScanTypeChange('CHECK_OUT')}
-            aria-label="Set scan mode to TIME OUT"
+            aria-label="Set scan mode to Time Out"
             className={`flex-1 md:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 cursor-pointer ${
               scanType === 'CHECK_OUT'
                 ? 'bg-indigo-600 text-white shadow-sm'
@@ -654,7 +732,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
             }`}
           >
             <LogOut className="w-4 h-4" />
-            <span>TIME OUT</span>
+            <span>Time Out</span>
           </button>
         </div>
 
@@ -883,49 +961,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
               </button>
             </form>
 
-            {/* Quick Test Simulation Row */}
-            <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-[#222730] transition-colors">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
-                Simulate Scans (For Testing)
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleVerifyPayload('KM100-001')}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-[#20252e] dark:hover:bg-[#2b3240] dark:border-[#2f3745] dark:text-orange-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  ✓ Elena (Instructor)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVerifyPayload('KM100-003')}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 dark:bg-[#20252e] dark:hover:bg-[#2b3240] dark:border-[#2f3745] dark:text-orange-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  ✓ Aria (Safety Officer)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVerifyPayload('KM100-004')}
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:border-amber-500/30 dark:text-amber-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  ⚠ David (On Leave)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVerifyPayload('KM100-005')}
-                  className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:border-rose-500/30 dark:text-rose-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  ✕ Sarah (Inactive)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleVerifyPayload('{"org":"ROGUE","code":"FAKE-999"}')}
-                  className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:border-rose-500/30 dark:text-rose-300 text-[11px] font-semibold transition-colors cursor-pointer"
-                >
-                  ✕ Unregistered Badge
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -934,15 +969,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           {/* High-Visibility Verification Result Card */}
           <div
             className={`border rounded-2xl p-5 shadow-sm transition-all ${
-              !lastResult
+              !lastResult || !bannerTone
                 ? 'bg-white border-slate-200 dark:bg-[#16191e] dark:border-[#222730]'
-                : lastResult.status === 'VALID'
-                ? 'bg-white border-emerald-500 dark:bg-[#16191e] dark:border-emerald-500/80'
-                : lastResult.status === 'DUPLICATE_SCAN' ||
-                  lastResult.status === 'ALREADY_ON_SITE' ||
-                  lastResult.status === 'NOT_ON_SITE'
-                ? 'bg-white border-amber-500 dark:bg-[#16191e] dark:border-amber-500/80'
-                : 'bg-white border-rose-500 dark:bg-[#16191e] dark:border-rose-500/80'
+                : `bg-white dark:bg-[#16191e] ${BANNER_BORDER[bannerTone]}`
             }`}
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#222730]">
@@ -962,31 +991,23 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                 {/* Result Status Banner */}
                 <div
                   className={`p-4 rounded-xl flex items-center space-x-3 ${
-                    lastResult.status === 'VALID'
-                      ? 'bg-emerald-600 text-white'
-                      : lastResult.status === 'DUPLICATE_SCAN' ||
-                        lastResult.status === 'ALREADY_ON_SITE' ||
-                        lastResult.status === 'NOT_ON_SITE'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-rose-600 text-white'
+                    bannerTone ? BANNER_BG[bannerTone] : 'bg-rose-600 text-white'
                   }`}
                 >
                   {lastResult.status === 'VALID' ? (
-                    <ShieldCheck className="w-8 h-8 shrink-0 text-white" />
+                    lastResult.scanType === 'CHECK_IN' ? (
+                      <LogIn className="w-8 h-8 shrink-0 text-white" />
+                    ) : (
+                      <LogOut className="w-8 h-8 shrink-0 text-white" />
+                    )
+                  ) : bannerTone === 'amber' ? (
+                    <AlertTriangle className="w-8 h-8 shrink-0 text-white" />
                   ) : (
                     <ShieldAlert className="w-8 h-8 shrink-0 text-white" />
                   )}
                   <div>
                     <h2 className="text-base font-black tracking-wide leading-tight uppercase">
-                      {lastResult.status === 'VALID'
-                        ? 'ACCESS GRANTED'
-                        : lastResult.status === 'DUPLICATE_SCAN'
-                        ? 'COOLDOWN ALERT'
-                        : lastResult.status === 'ALREADY_ON_SITE'
-                        ? 'ALREADY ON-SITE'
-                        : lastResult.status === 'NOT_ON_SITE'
-                        ? 'NOT ON-SITE'
-                        : 'ACCESS DENIED'}
+                      {bannerTitle}
                     </h2>
                     <p className="text-xs font-semibold opacity-95 leading-tight mt-0.5">
                       {lastResult.message}
@@ -1083,13 +1104,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
                     <div className="text-right shrink-0">
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                        className={`px-2 py-0.5 rounded text-[9px] font-black ${
                           log.scan_type === 'CHECK_IN'
                             ? 'bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30'
                             : 'bg-indigo-100 text-indigo-800 border border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
                         }`}
                       >
-                        {log.scan_type === 'CHECK_IN' ? 'TIME IN' : 'TIME OUT'}
+                        {log.scan_type === 'CHECK_IN' ? 'Time In' : 'Time Out'}
                       </span>
                       <div className="text-[9px] text-slate-500 font-mono mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {

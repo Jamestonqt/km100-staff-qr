@@ -25,6 +25,19 @@ export function App() {
     [logs, employees]
   );
 
+  const { admissionsToday, deniedToday } = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    let checkIns = 0;
+    let denied = 0;
+    for (const log of logs) {
+      if (new Date(log.scanned_at).getTime() < todayStart) continue;
+      if (log.scan_type === 'CHECK_IN' && log.verification_status === 'VALID') checkIns++;
+      if (log.verification_status !== 'VALID' && log.verification_status !== 'DUPLICATE_SCAN') denied++;
+    }
+    return { admissionsToday: checkIns, deniedToday: denied };
+  }, [logs]);
+
   // Apply theme class to <html> on theme state changes
   useEffect(() => {
     applyTheme(theme);
@@ -95,11 +108,13 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Real-time KPI Metric Cards */}
         <KPISummaryBar
           activePersonnel={employees.filter((e) => e.status === 'Active').length}
           currentlyOnSite={currentlyOnSite}
+          admissionsToday={admissionsToday}
+          deniedToday={deniedToday}
         />
 
         {/* Tab Views */}

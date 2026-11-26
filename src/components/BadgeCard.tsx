@@ -32,7 +32,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
 
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-white p-0.5 border border-orange-500 shadow-sm shrink-0 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
               <img
                 src="/km100-logo.png"
                 alt="KM100 Logo"

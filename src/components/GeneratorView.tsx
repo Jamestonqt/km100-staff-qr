@@ -193,8 +193,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Form (7 cols) */}
       <div className="lg:col-span-7 bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl p-6 shadow-sm transition-colors">
-        <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-200 dark:border-[#222730]">
-          <div>
+        <div className="flex items-start justify-between gap-3 pb-4 mb-5 border-b border-slate-200 dark:border-[#222730]">
+          <div className="min-w-0">
             <h2 className="text-base font-black text-slate-900 dark:text-white tracking-wide">
               Issue Official KM100 Staff Badge
             </h2>
@@ -202,7 +202,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               Register faculty or staff &amp; issue verifiable CR80 access pass
             </p>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30">
+          <span className="shrink-0 px-3 py-1 rounded-full text-xs font-mono font-bold bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/60 dark:text-orange-400 dark:border-orange-500/30">
             CR80 Pass
           </span>
         </div>
@@ -375,18 +375,18 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="pt-3 flex items-center justify-between">
+          <div className="pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <button
               type="submit"
               disabled={isSaving || !fullName.trim() || !employeeCode.trim()}
-              className="flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 disabled:opacity-50 text-white text-xs font-black shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 active:bg-orange-700 disabled:opacity-50 text-white text-xs font-black shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               <UserCheck className="w-4 h-4" />
               <span>{isSaving ? 'Registering...' : 'Save & Issue Badge'}</span>
             </button>
 
             {saveSuccess && (
-              <div className="flex items-center space-x-1.5 text-xs text-orange-600 dark:text-orange-400 font-bold animate-fade-in">
+              <div className="flex items-center justify-center sm:justify-start space-x-1.5 text-xs text-orange-600 dark:text-orange-400 font-bold animate-fade-in">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Badge Registered &amp; Verified!</span>
               </div>
@@ -396,8 +396,8 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       </div>
 
       {/* Right Column: Live CR80 Badge Preview & Export Controls (5 cols) */}
-      <div className="lg:col-span-5 flex flex-col items-center">
-        <div className="w-full max-w-[340px]">
+      <div className="lg:col-span-5 w-full flex flex-col items-center">
+        <div className="w-full max-w-[364px]">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
               <FileCheck className="w-3.5 h-3.5 text-orange-500" />
@@ -407,7 +407,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           </div>
 
           {/* Dedicated printable card wrapper */}
-          <div id="printable-badge-area" className="flex justify-center p-3 rounded-2xl bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] shadow-sm transition-colors">
+          <div id="printable-badge-area" className="w-full overflow-x-auto flex justify-center p-3 rounded-2xl bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] shadow-sm transition-colors">
             <BadgeCard employee={previewEmployee} id="cr80-badge-card" />
           </div>
 
