@@ -12,10 +12,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes('html2canvas') || id.includes('canvas-confetti')) {
+          if (id.includes('exceljs') || id.includes('html2canvas') || id.includes('canvas-confetti')) {
             return 'vendor-export';
           }
-          if (id.includes('html5-qrcode') || id.includes('qrcode.react')) {
+          if (id.includes('html5-qrcode') || id.includes('qrcode.react') || id.includes('qrcode')) {
             return 'vendor-qr';
           }
           if (id.includes('@supabase')) {
@@ -30,6 +30,6 @@ export default defineConfig({
         },
       },
     },
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 1200,
   },
 })

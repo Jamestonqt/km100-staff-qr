@@ -10,6 +10,8 @@ import {
   Download,
   Shield,
   Save,
+  FileSpreadsheet,
+  RefreshCw,
 } from 'lucide-react';
 import type {
   Employee,
@@ -54,6 +56,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isExportingExcel, setIsExportingExcel] = useState<boolean>(false);
   const [badgeScale, setBadgeScale] = useState<number>(1);
   const badgeScalerRef = useRef<HTMLDivElement>(null);
   const badgeModalRef = useRef<HTMLDivElement>(null);
@@ -199,6 +202,21 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     }
   };
 
+  // Export Filtered Personnel to Excel (.xlsx) with embedded QR codes
+  const handleExportExcel = async () => {
+    if (filteredEmployees.length === 0 || isExportingExcel) return;
+    setIsExportingExcel(true);
+    try {
+      const { exportPersonnelToExcel } = await import('../utils/exportExcel');
+      await exportPersonnelToExcel(filteredEmployees);
+    } catch (err) {
+      console.error('Failed to export Excel workbook:', err);
+      alert('An error occurred while generating the Excel workbook.');
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Search & Filter Header */}
@@ -216,51 +234,74 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
           />
         </div>
 
-        {/* Filter Dropdowns */}
-        <div className="grid grid-cols-2 gap-2 w-full md:flex md:flex-wrap md:items-center md:gap-3 md:w-auto">
-          {/* Department Filter */}
-          <div className="flex items-center space-x-2 w-full md:w-auto bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
-            <Filter className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              aria-label="Filter by department"
-              className="w-full md:w-auto bg-transparent text-xs font-bold text-slate-800 dark:text-slate-300 focus:outline-none cursor-pointer"
-            >
-              <option value="ALL" className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
-                All Departments
-              </option>
-              {DEPARTMENTS.map((dept) => (
-                <option key={dept} value={dept} className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
-                  {dept}
+        {/* Filter Dropdowns & Export Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full md:w-auto">
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-2.5">
+            {/* Department Filter */}
+            <div className="flex items-center space-x-2 w-full sm:w-auto bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
+              <Filter className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+              <select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                aria-label="Filter by department"
+                className="w-full sm:w-auto bg-transparent text-xs font-bold text-slate-800 dark:text-slate-300 focus:outline-none cursor-pointer"
+              >
+                <option value="ALL" className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
+                  All Departments
                 </option>
-              ))}
-            </select>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept} value={dept} className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center space-x-2 w-full sm:w-auto bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
+              <Shield className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                aria-label="Filter by account status"
+                className="w-full sm:w-auto bg-transparent text-xs font-bold text-slate-800 dark:text-slate-300 focus:outline-none cursor-pointer"
+              >
+                <option value="ALL" className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
+                  All Statuses
+                </option>
+                <option value="Active" className="bg-white text-emerald-600 dark:bg-[#16191e] dark:text-emerald-400">
+                  Active
+                </option>
+                <option value="On Leave" className="bg-white text-amber-600 dark:bg-[#16191e] dark:text-amber-400">
+                  On Leave
+                </option>
+                <option value="Inactive" className="bg-white text-rose-600 dark:bg-[#16191e] dark:text-rose-400">
+                  Inactive
+                </option>
+              </select>
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center space-x-2 w-full md:w-auto bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] px-3.5 py-2.5 rounded-xl transition-colors">
-            <Shield className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter by account status"
-              className="w-full md:w-auto bg-transparent text-xs font-bold text-slate-800 dark:text-slate-300 focus:outline-none cursor-pointer"
-            >
-              <option value="ALL" className="bg-white text-slate-900 dark:bg-[#16191e] dark:text-white">
-                All Statuses
-              </option>
-              <option value="Active" className="bg-white text-emerald-600 dark:bg-[#16191e] dark:text-emerald-400">
-                Active
-              </option>
-              <option value="On Leave" className="bg-white text-amber-600 dark:bg-[#16191e] dark:text-amber-400">
-                On Leave
-              </option>
-              <option value="Inactive" className="bg-white text-rose-600 dark:bg-[#16191e] dark:text-rose-400">
-                Inactive
-              </option>
-            </select>
-          </div>
+          {/* Export Excel (.xlsx) Button */}
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            disabled={isExportingExcel || filteredEmployees.length === 0}
+            aria-label="Export filtered personnel directory to Excel with embedded QR codes"
+            className="min-h-[42px] flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {isExportingExcel ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Generating XLSX...</span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4 text-white" />
+                <span>Export Excel</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
