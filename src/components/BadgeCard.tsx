@@ -1,8 +1,8 @@
-import React from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState, useEffect } from 'react';
 import { Cpu } from 'lucide-react';
 import type { Employee } from '../types/database';
 import { createQRPayload, getInitials } from '../utils/qr';
+import { generateBrandedQrDataUrl } from '../utils/brandedQr';
 
 interface BadgeCardProps {
   employee: Employee;
@@ -13,6 +13,22 @@ interface BadgeCardProps {
 export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge-card', className = '' }) => {
   const qrValue = createQRPayload(employee);
   const initials = getInitials(employee.full_name);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  useEffect(() => {
+    let isMounted = true;
+    generateBrandedQrDataUrl(qrValue, 320)
+      .then((url) => {
+        if (isMounted) setQrDataUrl(url);
+      })
+      .catch((err) => {
+        console.error('Failed to generate branded QR code:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [qrValue]);
 
   const isInactive = employee.status === 'Inactive';
   const isOnLeave = employee.status === 'On Leave';
@@ -118,16 +134,21 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
           </div>
         </div>
 
-        {/* High-Resolution QR Code with Optical Quiet Zone */}
-        <div className="my-2 p-2.5 bg-white rounded-xl shadow-inner border border-slate-200 flex items-center justify-center">
-          <QRCodeSVG
-            value={qrValue}
-            size={150}
-            level="H"
-            marginSize={4}
-            fgColor="#0d0f12"
-            bgColor="#ffffff"
-          />
+        {/* High-Resolution Branded QR Code with Optical Quiet Zone & KM100 Logo */}
+        <div className="my-2 p-2.5 bg-white rounded-xl shadow-inner border border-slate-200 flex items-center justify-center w-[170px] h-[170px]">
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt={`KM100 QR Access Badge for ${employee.full_name}`}
+              width={150}
+              height={150}
+              className="w-[150px] h-[150px] object-contain rounded-lg"
+            />
+          ) : (
+            <div className="w-[150px] h-[150px] bg-slate-50 flex items-center justify-center rounded-lg">
+              <span className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
 
         <div className="text-[9px] text-slate-400 font-mono tracking-tight leading-tight">

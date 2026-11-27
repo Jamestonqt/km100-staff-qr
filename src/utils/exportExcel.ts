@@ -1,8 +1,8 @@
 import ExcelJS from 'exceljs';
-import QRCode from 'qrcode';
 import type { Employee } from '../types/database';
 import { createQRPayload, generateQRToken } from './qr';
 import { getManilaDateString } from './presence';
+import { generateBrandedQrDataUrl } from './brandedQr';
 
 /**
  * Generates and downloads a styled Excel workbook (.xlsx) containing employee details
@@ -137,16 +137,8 @@ export async function exportPersonnelToExcel(employees: Employee[]): Promise<voi
       qr_token: emp.qr_token || generateQRToken(emp.employee_code),
     });
 
-    // Generate QR image PNG (margin: 2, width: 140)
-    const qrDataUrl = await QRCode.toDataURL(qrPayload, {
-      margin: 2,
-      width: 140,
-      errorCorrectionLevel: 'M',
-      color: {
-        dark: '#000000',
-        light: '#ffffff',
-      },
-    });
+    // Generate crisp branded QR code PNG with centered KM100 logo (High error correction, margin: 3)
+    const qrDataUrl = await generateBrandedQrDataUrl(qrPayload, 240);
 
     // Embed QR image into the workbook
     const imageId = workbook.addImage({

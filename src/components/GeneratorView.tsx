@@ -16,7 +16,8 @@ import type {
 import { DEPARTMENTS, SHIFT_SCHEDULES } from '../types/database';
 import { portalService } from '../lib/supabase';
 import { BadgeCard } from './BadgeCard';
-import { generateQRToken, getNextEmployeeCode } from '../utils/qr';
+import { createQRPayload, generateQRToken, getNextEmployeeCode } from '../utils/qr';
+import { generateBrandedQrDataUrl } from '../utils/brandedQr';
 
 interface GeneratorViewProps {
   onEmployeeCreated: (newEmp: Employee) => void;
@@ -127,32 +128,21 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     }
   };
 
-  // Download high-resolution QR PNG only
-  const handleDownloadQR = () => {
-    const svgEl = document.querySelector('#cr80-badge-card svg') as SVGElement | null;
-    if (!svgEl) return;
-
-    const svgData = new XMLSerializer().serializeToString(svgEl);
-    const canvas = document.createElement('canvas');
-    canvas.width = 1000;
-    canvas.height = 1000;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 1000, 1000);
-      ctx.drawImage(img, 50, 50, 900, 900);
-      const pngUrl = canvas.toDataURL('image/png');
+  // Download high-resolution branded QR PNG only (1000x1000 with centered KM100 logo)
+  const handleDownloadQR = async () => {
+    try {
+      const qrPayload = createQRPayload(previewEmployee);
+      const pngUrl = await generateBrandedQrDataUrl(qrPayload, 1000);
       const downloadLink = document.createElement('a');
       downloadLink.href = pngUrl;
-      downloadLink.download = `${previewEmployee.employee_code}-qr.png`;
+      downloadLink.download = `${previewEmployee.employee_code}-KM100-QR.png`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
-    };
-    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    } catch (err) {
+      console.error('Failed to download branded QR:', err);
+      alert('Unable to generate branded QR download.');
+    }
   };
 
   // Download full CR80 badge as PNG via html2canvas
