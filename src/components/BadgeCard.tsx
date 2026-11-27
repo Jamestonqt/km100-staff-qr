@@ -29,9 +29,6 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
     };
   }, [qrValue]);
 
-  const isInactive = employee.status === 'Inactive';
-  const isOnLeave = employee.status === 'On Leave';
-
   return (
     <div
       id={id}
@@ -77,16 +74,16 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
       <div className="h-1.5 w-full bg-orange-600" />
 
       {/* Main Body */}
-      <div className="flex-1 px-5 pt-3.5 pb-4 flex flex-col items-center justify-between text-center">
-        {/* 1x1 Square Photo without Orange Border */}
+      <div className="flex-1 px-5 pt-3 pb-4 flex flex-col items-center justify-between text-center">
+        {/* 2x2 Square Photo (No Orange Border, No Status Pill) */}
         <div className="relative mt-0.5">
-          <div className="w-24 h-24 aspect-square rounded-xl p-0.5 bg-white border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
+          <div className="w-32 h-32 aspect-square rounded-xl p-0.5 bg-white border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
             {employee.photo_url ? (
               <img
                 src={employee.photo_url}
                 alt={employee.full_name}
-                width={96}
-                height={96}
+                width={128}
+                height={128}
                 loading="lazy"
                 className="w-full h-full rounded-lg object-cover bg-slate-100"
                 crossOrigin="anonymous"
@@ -95,42 +92,24 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
                 }}
               />
             ) : (
-              <div className="w-full h-full rounded-lg bg-slate-100 flex items-center justify-center text-xl font-black text-slate-700 tracking-wider">
+              <div className="w-full h-full rounded-lg bg-slate-100 flex items-center justify-center text-2xl font-black text-slate-700 tracking-wider">
                 {initials}
               </div>
             )}
           </div>
-
-          {/* Account Status Badge */}
-          <div
-            className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase shadow-sm border ${
-              isInactive
-                ? 'bg-rose-600 text-white border-rose-500'
-                : isOnLeave
-                ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                : 'bg-emerald-600 text-white border-emerald-500'
-            }`}
-          >
-            {employee.status}
-          </div>
         </div>
 
-        {/* Employee Details */}
-        <div className="mt-2.5 w-full">
+        {/* Employee Details (Clean Typography, No Form Cards, 1 Role) */}
+        <div className="mt-1 w-full space-y-0.5">
           <h2 className="text-lg font-black text-slate-900 tracking-tight leading-tight line-clamp-1">
             {employee.full_name}
           </h2>
-          <p className="text-xs text-orange-600 font-bold mt-0.5 line-clamp-1 uppercase tracking-wide">
+          <p className="text-xs text-orange-600 font-bold uppercase tracking-wider line-clamp-1">
             {employee.role}
           </p>
-          <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700">
-              {employee.department}
-            </span>
-            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-orange-50 border border-orange-200 text-orange-700 tracking-wider">
-              {employee.employee_code}
-            </span>
-          </div>
+          <p className="text-xs font-mono font-bold text-slate-700 tracking-wider">
+            {employee.employee_code}
+          </p>
         </div>
 
         {/* High-Resolution Branded QR Code */}
