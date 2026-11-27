@@ -20,6 +20,7 @@ import { BadgeCard } from './BadgeCard';
 import { createQRPayload, generateQRToken, getNextEmployeeCode } from '../utils/qr';
 import { generateBrandedQrDataUrl } from '../utils/brandedQr';
 import { fileToResizedDataUrl } from '../utils/imageUpload';
+import { downloadPassPng } from '../utils/passCanvas';
 
 interface GeneratorViewProps {
   onEmployeeCreated: (newEmp: Employee) => void;
@@ -163,63 +164,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
     }
   };
 
-  // Download full CR80 badge as PNG via html2canvas
+  // Download full CR80 badge as PNG via 2x resolution canvas
   const handleDownloadFullBadge = async () => {
-    const badgeEl = document.getElementById('cr80-badge-card');
-    if (!badgeEl) return;
-
     setIsDownloading(true);
     try {
-      // Ensure all images are fully loaded before capturing
-      const images = Array.from(badgeEl.querySelectorAll('img'));
-      await Promise.all(
-        images.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete) return resolve();
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            })
-        )
-      );
-
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(badgeEl, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        imageTimeout: 6000,
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `${previewEmployee.employee_code}-CR80-badge.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadPassPng(previewEmployee);
     } catch (err) {
-      console.error('Badge image render failed:', err);
-      try {
-        const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(badgeEl, {
-          scale: 3,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-        });
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `${previewEmployee.employee_code}-CR80-badge.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (fallbackErr) {
-        console.error('Fallback badge render failed:', fallbackErr);
-        alert('Unable to render badge image. Please try uploading a local image directly.');
-      }
+      console.error('Full badge PNG export error:', err);
     } finally {
       setIsDownloading(false);
     }

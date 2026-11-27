@@ -25,6 +25,7 @@ import { BadgeCard } from './BadgeCard';
 import { getInitials } from '../utils/qr';
 import { getOnSiteEmployeeCodes } from '../utils/presence';
 import { fileToResizedDataUrl } from '../utils/imageUpload';
+import { downloadPassPng } from '../utils/passCanvas';
 
 interface DirectoryViewProps {
   employees: Employee[];
@@ -188,70 +189,16 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     }
   };
 
-  // Download Badge PNG in Modal
+  // Download Pass on Modal (renders full pass on 2x canvas as PNG)
   const handleDownloadModalBadge = async () => {
-    const badgeEl = document.getElementById('modal-badge-preview');
-    if (!badgeEl || !selectedBadgeEmployee) return;
+    if (!selectedBadgeEmployee) return;
 
     setIsDownloading(true);
-    // Capture the badge at its native 340x530 size, not the scaled preview.
-    const scaler = badgeScalerRef.current;
-    const previousTransform = scaler?.style.transform ?? '';
-    if (scaler) scaler.style.transform = 'none';
-
     try {
-      // Ensure all images are fully loaded before capturing
-      const images = Array.from(badgeEl.querySelectorAll('img'));
-      await Promise.all(
-        images.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete) return resolve();
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            })
-        )
-      );
-
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(badgeEl, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        imageTimeout: 6000,
-      });
-
-      const dataUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `${selectedBadgeEmployee.employee_code}-badge.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadPassPng(selectedBadgeEmployee);
     } catch (err) {
-      console.error('Failed to download badge:', err);
-      try {
-        const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(badgeEl, {
-          scale: 3,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-        });
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `${selectedBadgeEmployee.employee_code}-badge.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } catch (fallbackErr) {
-        console.error('Fallback badge download failed:', fallbackErr);
-        alert('Failed to download badge image.');
-      }
+      console.error('Full badge PNG export error:', err);
     } finally {
-      if (scaler) scaler.style.transform = previousTransform;
       setIsDownloading(false);
     }
   };
