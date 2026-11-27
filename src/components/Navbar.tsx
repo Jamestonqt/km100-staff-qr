@@ -6,9 +6,6 @@ import {
   FileText,
   Volume2,
   VolumeX,
-  Database,
-  CheckCircle2,
-  AlertCircle,
   Sun,
   Moon,
   LogOut,
@@ -20,8 +17,8 @@ export type ActiveTab = 'scanner' | 'generator' | 'directory' | 'logs';
 interface NavbarProps {
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
-  isSupabaseLive: boolean;
-  onOpenSetupModal: () => void;
+  isSupabaseLive?: boolean;
+  onOpenSetupModal?: () => void;
   isMuted: boolean;
   onToggleMute: () => void;
   theme: Theme;
@@ -33,8 +30,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onTabChange,
-  isSupabaseLive,
-  onOpenSetupModal,
   isMuted,
   onToggleMute,
   theme,
@@ -45,9 +40,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 dark:border-[#222730] dark:bg-[#12151a]/95 backdrop-blur-md transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-2 h-16 sm:h-20">
+        <div className="flex items-center justify-between gap-4 h-16 sm:h-20">
           {/* Brand & Official Logo */}
-          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+          <div className="flex items-center space-x-3 shrink-0">
             <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
               <img
                 src="/km100-logo.png"
@@ -55,100 +50,73 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-full h-full object-contain rounded-full"
               />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center space-x-2 min-w-0">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white m-0 p-0 leading-none inline-flex items-center">
-                  KM100
-                </h1>
-                <span className="hidden sm:inline text-[10px] sm:text-[11px] px-2 py-0.5 rounded font-extrabold bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-600/20 dark:text-orange-400 dark:border-orange-500/30 uppercase tracking-wider">
-                  Access Portal
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 tracking-wide uppercase truncate mt-0.5">
+            <div className="shrink-0">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white m-0 p-0 leading-tight">
+                KM100
+              </h1>
+              <p className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase whitespace-nowrap">
                 Skills &amp; Training Center, Inc.
               </p>
             </div>
           </div>
 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1.5 p-1 bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl transition-colors">
+          <nav className="hidden md:flex items-center space-x-1 sm:space-x-1.5 p-1 bg-slate-100 border border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl transition-colors shrink-0">
             <button
               onClick={() => onTabChange('scanner')}
               aria-label="Open Scanner Tab"
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
+              className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'scanner'
                   ? 'bg-orange-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
-              <Shield className="w-4 h-4" />
-              <span>Access Scanner</span>
+              <Shield className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Access Scanner</span>
             </button>
 
             <button
               onClick={() => onTabChange('generator')}
               aria-label="Open Issue Staff Badge Tab"
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
+              className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'generator'
                   ? 'bg-orange-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
-              <QrCode className="w-4 h-4" />
-              <span>Issue Badge</span>
+              <QrCode className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Issue Badge</span>
             </button>
 
             <button
               onClick={() => onTabChange('directory')}
               aria-label="Open Staff Directory Tab"
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
+              className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'directory'
                   ? 'bg-orange-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
-              <Users className="w-4 h-4" />
-              <span>Personnel Directory</span>
+              <Users className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Personnel Directory</span>
             </button>
 
             <button
               onClick={() => onTabChange('logs')}
               aria-label="Open Attendance & Scan Logs Tab"
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
+              className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'logs'
                   ? 'bg-orange-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
-              <FileText className="w-4 h-4" />
-              <span>Attendance Logs</span>
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="whitespace-nowrap">Attendance Logs</span>
             </button>
           </nav>
 
-          {/* Right Controls: Database status + Theme toggle + Sound toggle */}
+          {/* Right Controls: Theme toggle + Sound toggle + Sign Out */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-            {/* Supabase status indicator */}
-            <button
-              onClick={onOpenSetupModal}
-              title={isSupabaseLive ? 'Connected to live Supabase DB' : 'Running in local Demo Storage mode. Click to view DB setup'}
-              aria-label={isSupabaseLive ? 'Supabase database is connected. Click for setup instructions' : 'Running in Demo Sandbox mode. Click for setup instructions'}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer ${
-                isSupabaseLive
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:border-emerald-500/40 dark:text-emerald-400 dark:hover:bg-emerald-950'
-                  : 'bg-orange-50 border-orange-300 text-orange-800 hover:bg-orange-100 dark:bg-orange-950/40 dark:border-orange-500/40 dark:text-orange-300 dark:hover:bg-orange-950/70'
-              }`}
-            >
-              <Database className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">
-                {isSupabaseLive ? 'Supabase Connected' : 'Local Demo Sandbox'}
-              </span>
-              {isSupabaseLive ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <AlertCircle className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
-              )}
-            </button>
-
             {/* Light / Dark Mode Toggle */}
             <button
               onClick={onToggleTheme}
@@ -178,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onSignOut}
               title={userEmail ? `Signed in as ${userEmail} • Click to Sign Out` : 'Sign Out of KM100 Admin Access'}
               aria-label="Sign Out of KM100 Admin Access"
-              className="min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/70 transition-colors flex items-center space-x-1.5 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer shadow-sm"
+              className="min-h-[44px] px-3 sm:px-3.5 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/70 transition-colors flex items-center space-x-1.5 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer shadow-sm whitespace-nowrap"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
               <span className="hidden sm:inline">Sign Out</span>
