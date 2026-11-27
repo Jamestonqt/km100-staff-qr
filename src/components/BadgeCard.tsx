@@ -99,14 +99,11 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
           </div>
         </div>
 
-        {/* Employee Details (Clean Typography, No Form Cards, 1 Role) */}
-        <div className="mt-1 w-full space-y-0.5">
+        {/* Employee Details (Name & Employee Code Only - Position Removed) */}
+        <div className="mt-1.5 w-full space-y-0.5">
           <h2 className="text-lg font-black text-slate-900 tracking-tight leading-tight line-clamp-1">
             {employee.full_name}
           </h2>
-          <p className="text-xs text-orange-600 font-bold uppercase tracking-wider line-clamp-1">
-            {employee.role}
-          </p>
           <p className="text-xs font-mono font-bold text-slate-700 tracking-wider">
             {employee.employee_code}
           </p>

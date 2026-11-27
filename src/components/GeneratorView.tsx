@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Download,
   Printer,
@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   FileCheck,
+  Upload,
 } from 'lucide-react';
 import type {
   Employee,
@@ -18,6 +19,7 @@ import { portalService } from '../lib/supabase';
 import { BadgeCard } from './BadgeCard';
 import { createQRPayload, generateQRToken, getNextEmployeeCode } from '../utils/qr';
 import { generateBrandedQrDataUrl } from '../utils/brandedQr';
+import { fileToResizedDataUrl } from '../utils/imageUpload';
 
 interface GeneratorViewProps {
   onEmployeeCreated: (newEmp: Employee) => void;
@@ -61,11 +63,27 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
   const [shiftSchedule, setShiftSchedule] = useState<string>('Day Shift (08:00 - 17:00)');
   const [status, setStatus] = useState<EmployeeStatus>('Active');
   const [photoUrl, setPhotoUrl] = useState<string>(SAMPLE_AVATARS[0]);
+  const photoFileInputRef = useRef<HTMLInputElement>(null);
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handlePhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await fileToResizedDataUrl(file);
+      setPhotoUrl(dataUrl);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to read image file.');
+    } finally {
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = '';
+      }
+    }
+  };
 
   // Memoized preview employee object
   const previewEmployee: Employee = useMemo(() => ({
@@ -152,12 +170,26 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
 
     setIsDownloading(true);
     try {
+      // Ensure all images are fully loaded before capturing
+      const images = Array.from(badgeEl.querySelectorAll('img'));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
+        imageTimeout: 6000,
       });
 
       const dataUrl = canvas.toDataURL('image/png');
@@ -169,7 +201,25 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       document.body.removeChild(link);
     } catch (err) {
       console.error('Badge image render failed:', err);
-      alert('Unable to render badge image. Check image CORS permissions.');
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(badgeEl, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+        });
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${previewEmployee.employee_code}-CR80-badge.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (fallbackErr) {
+        console.error('Fallback badge render failed:', fallbackErr);
+        alert('Unable to render badge image. Please try uploading a local image directly.');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -333,40 +383,69 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
             </div>
           </div>
 
-          {/* Photo URL & Presets */}
+          {/* Photo Upload & Presets */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="gen-photo-url" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Staff Photo URL (Optional)
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                Staff 2×2 ID Picture
               </label>
-              <button
-                type="button"
-                onClick={handlePickRandomAvatar}
-                className="text-[11px] text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
-              >
-                <Sparkles className="w-3 h-3" />
-                Randomize Photo
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                id="gen-photo-url"
-                type="url"
-                value={photoUrl}
-                onChange={(e) => setPhotoUrl(e.target.value)}
-                placeholder="https://... (or leave empty for initials)"
-                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
-              />
               {photoUrl && (
                 <button
                   type="button"
                   onClick={() => setPhotoUrl('')}
-                  className="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 bg-slate-200 dark:text-slate-400 dark:hover:text-white dark:bg-slate-800 rounded-xl cursor-pointer"
+                  className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 font-bold hover:underline cursor-pointer"
                 >
-                  Clear
+                  Remove Picture
                 </button>
               )}
             </div>
+
+            {/* Hidden file input */}
+            <input
+              ref={photoFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoFileUpload}
+              className="hidden"
+              id="badge-photo-file-input"
+            />
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              {/* Upload 2x2 Picture Button */}
+              <button
+                type="button"
+                onClick={() => photoFileInputRef.current?.click()}
+                className="min-h-[42px] px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-sm"
+              >
+                <Upload className="w-4 h-4 text-white shrink-0" />
+                <span>Upload 2×2 Picture</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePickRandomAvatar}
+                className="min-h-[42px] px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#222730] dark:hover:bg-[#2c3340] border border-slate-300 dark:border-[#323946] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                <span>Sample Photo</span>
+              </button>
+
+              <input
+                id="gen-photo-url"
+                type="url"
+                value={photoUrl.startsWith('data:') ? '' : photoUrl}
+                onChange={(e) => setPhotoUrl(e.target.value)}
+                placeholder={photoUrl.startsWith('data:') ? 'Custom 2×2 image uploaded' : 'Or paste image URL (https://...)'}
+                className="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
+              />
+            </div>
+
+            {photoUrl && photoUrl.startsWith('data:') && (
+              <p className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                Custom 2×2 photo uploaded and ready for high-resolution ID card download.
+              </p>
+            )}
           </div>
 
           {/* Action buttons */}

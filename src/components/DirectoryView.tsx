@@ -12,6 +12,7 @@ import {
   Save,
   FileSpreadsheet,
   RefreshCw,
+  Upload,
 } from 'lucide-react';
 import type {
   Employee,
@@ -23,6 +24,7 @@ import { portalService } from '../lib/supabase';
 import { BadgeCard } from './BadgeCard';
 import { getInitials } from '../utils/qr';
 import { getOnSiteEmployeeCodes } from '../utils/presence';
+import { fileToResizedDataUrl } from '../utils/imageUpload';
 
 interface DirectoryViewProps {
   employees: Employee[];
@@ -62,6 +64,22 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
   const badgeModalRef = useRef<HTMLDivElement>(null);
   const editModalRef = useRef<HTMLDivElement>(null);
   const deleteModalRef = useRef<HTMLDivElement>(null);
+  const editPhotoFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleEditPhotoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingEmployee) return;
+    try {
+      const dataUrl = await fileToResizedDataUrl(file);
+      setEditingEmployee({ ...editingEmployee, photo_url: dataUrl });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to read image file.');
+    } finally {
+      if (editPhotoFileInputRef.current) {
+        editPhotoFileInputRef.current.value = '';
+      }
+    }
+  };
 
   // Keep the badge scaled to fit the modal as the window resizes.
   useEffect(() => {
@@ -180,13 +198,30 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
     const scaler = badgeScalerRef.current;
     const previousTransform = scaler?.style.transform ?? '';
     if (scaler) scaler.style.transform = 'none';
+
     try {
+      // Ensure all images are fully loaded before capturing
+      const images = Array.from(badgeEl.querySelectorAll('img'));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            })
+        )
+      );
+
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
         backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 6000,
       });
+
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = dataUrl;
@@ -196,6 +231,25 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
       document.body.removeChild(link);
     } catch (err) {
       console.error('Failed to download badge:', err);
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(badgeEl, {
+          scale: 3,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+        });
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `${selectedBadgeEmployee.employee_code}-badge.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (fallbackErr) {
+        console.error('Fallback badge download failed:', fallbackErr);
+        alert('Failed to download badge image.');
+      }
     } finally {
       if (scaler) scaler.style.transform = previousTransform;
       setIsDownloading(false);
@@ -765,22 +819,54 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
               </div>
 
               <div>
-                <label htmlFor="edit-photo-url" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Photo URL
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    2×2 Staff Picture
+                  </label>
+                  {editingEmployee.photo_url && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingEmployee({ ...editingEmployee, photo_url: null })}
+                      className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 font-bold hover:underline cursor-pointer"
+                    >
+                      Remove Picture
+                    </button>
+                  )}
+                </div>
+
                 <input
-                  id="edit-photo-url"
-                  type="url"
-                  value={editingEmployee.photo_url || ''}
-                  onChange={(e) =>
-                    setEditingEmployee({
-                      ...editingEmployee,
-                      photo_url: e.target.value || null,
-                    })
-                  }
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  ref={editPhotoFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditPhotoFileUpload}
+                  className="hidden"
+                  id="edit-photo-file-input"
                 />
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editPhotoFileInputRef.current?.click()}
+                    className="min-h-[38px] px-3.5 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition-all cursor-pointer shadow-xs shrink-0"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-white" />
+                    <span>Upload 2×2 Picture</span>
+                  </button>
+
+                  <input
+                    id="edit-photo-url"
+                    type="url"
+                    value={editingEmployee.photo_url?.startsWith('data:') ? '' : editingEmployee.photo_url || ''}
+                    onChange={(e) =>
+                      setEditingEmployee({
+                        ...editingEmployee,
+                        photo_url: e.target.value || null,
+                      })
+                    }
+                    placeholder={editingEmployee.photo_url?.startsWith('data:') ? 'Custom 2×2 image uploaded' : 'Or enter image URL (https://...)'}
+                    className="flex-1 min-w-0 px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-orange-500 transition-colors"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end gap-2">
