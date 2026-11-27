@@ -139,6 +139,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Error Banner */}
             {errorMessage && (
               <div
+                id="login-error-msg"
                 role="alert"
                 aria-live="assertive"
                 className="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800/50 dark:text-rose-300 text-xs flex items-start space-x-2.5 animate-fadeIn"
@@ -207,6 +208,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     required
+                    aria-describedby={errorMessage ? 'login-error-msg' : undefined}
+                    aria-invalid={Boolean(errorMessage)}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"

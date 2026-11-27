@@ -38,4 +38,14 @@ export function applyTheme(theme: Theme): void {
   } catch {
     // ignore
   }
+
+  // Update dynamic meta theme-color for mobile browsers
+  try {
+    const metaTags = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+    metaTags.forEach((meta) => {
+      meta.setAttribute('content', theme === 'dark' ? '#0d0f12' : '#ffffff');
+    });
+  } catch {
+    // ignore
+  }
 }
