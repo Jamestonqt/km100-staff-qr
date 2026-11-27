@@ -412,7 +412,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                           onClick={() => setSelectedBadgeEmployee(emp)}
                           title="View & Print Badge"
                           aria-label={`View QR badge for ${emp.full_name}`}
-                          className="min-h-[38px] min-w-[38px] p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-[#222730] dark:hover:border-[#323946] dark:text-slate-200 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -421,7 +421,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                           onClick={() => setEditingEmployee(emp)}
                           title="Edit Staff"
                           aria-label={`Edit staff record for ${emp.full_name}`}
-                          className="min-h-[38px] min-w-[38px] p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-[#222730] dark:hover:border-[#323946] dark:text-slate-200 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -431,7 +431,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                           disabled={deletingId === emp.id}
                           title="Delete Staff"
                           aria-label={`Delete staff record for ${emp.full_name}`}
-                          className="min-h-[38px] min-w-[38px] p-2 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 dark:bg-slate-800 dark:hover:bg-rose-900/60 dark:text-slate-300 dark:hover:text-rose-400 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:opacity-50 cursor-pointer"
+                          className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-rose-950/60 dark:hover:border-rose-900/60 dark:text-slate-300 dark:hover:text-rose-400 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:opacity-50 cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -534,12 +534,12 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                       {isOnSite ? 'On-Site' : 'Off-Site'}
                     </span>
 
-                    <div className="flex items-center space-x-1.5">
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={() => setSelectedBadgeEmployee(emp)}
                         title="View & Print Badge"
                         aria-label={`View QR badge for ${emp.full_name}`}
-                        className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+                        className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-[#222730] dark:hover:border-[#323946] dark:text-slate-200 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -547,7 +547,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                         onClick={() => setEditingEmployee(emp)}
                         title="Edit Staff"
                         aria-label={`Edit staff record for ${emp.full_name}`}
-                        className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
+                        className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-[#222730] dark:hover:border-[#323946] dark:text-slate-200 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -556,7 +556,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                         disabled={deletingId === emp.id}
                         title="Delete Staff"
                         aria-label={`Delete staff record for ${emp.full_name}`}
-                        className="min-h-[40px] min-w-[40px] p-2 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 dark:bg-slate-800 dark:hover:bg-rose-900/60 dark:text-slate-300 dark:hover:text-rose-400 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:opacity-50 cursor-pointer"
+                        className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] dark:hover:bg-rose-950/60 dark:hover:border-rose-900/60 dark:text-slate-300 dark:hover:text-rose-400 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:opacity-50 cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

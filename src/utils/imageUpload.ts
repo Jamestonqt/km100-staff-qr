@@ -1,7 +1,7 @@
 /**
  * Reads an uploaded image File and resizes it to a maximum dimension (default: 600px),
  * returning a clean, compressed base64 JPEG data URL suitable for local storage,
- * database persistence, and untainted html2canvas exports.
+ * database persistence, and untainted HTML5 Canvas pass exports.
  */
 export function fileToResizedDataUrl(file: File, maxSize: number = 600): Promise<string> {
   return new Promise((resolve, reject) => {

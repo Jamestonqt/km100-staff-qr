@@ -276,13 +276,13 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               placeholder="e.g. Technical Vocational Trainer"
               className="w-full px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
             />
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {COMMON_ROLES.map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setRole(r)}
-                  className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
+                  className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
                     role === r
                       ? 'bg-orange-600 text-white shadow-sm'
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#222730] dark:text-slate-300 dark:hover:text-white'
@@ -337,14 +337,15 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
           {/* Photo Upload & Presets */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+              <label htmlFor="gen-photo-url" className="block text-xs font-bold text-slate-800 dark:text-slate-200">
                 Staff 2×2 ID Picture
               </label>
               {photoUrl && (
                 <button
                   type="button"
                   onClick={() => setPhotoUrl('')}
-                  className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 font-bold hover:underline cursor-pointer"
+                  aria-label="Remove uploaded staff photo"
+                  className="min-h-[36px] px-2 py-1 text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 font-bold hover:underline cursor-pointer flex items-center"
                 >
                   Remove Picture
                 </button>
@@ -356,6 +357,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               ref={photoFileInputRef}
               type="file"
               accept="image/*"
+              aria-label="Upload 2x2 Picture file from device"
               onChange={handlePhotoFileUpload}
               className="hidden"
               id="badge-photo-file-input"
@@ -366,7 +368,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               <button
                 type="button"
                 onClick={() => photoFileInputRef.current?.click()}
-                className="min-h-[42px] px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-sm"
+                className="min-h-[44px] px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
               >
                 <Upload className="w-4 h-4 text-white shrink-0" />
                 <span>Upload 2×2 Picture</span>
@@ -375,7 +377,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               <button
                 type="button"
                 onClick={handlePickRandomAvatar}
-                className="min-h-[42px] px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#222730] dark:hover:bg-[#2c3340] border border-slate-300 dark:border-[#323946] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                className="min-h-[44px] px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#222730] dark:hover:bg-[#2c3340] border border-slate-300 dark:border-[#323946] text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
               >
                 <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                 <span>Sample Photo</span>
@@ -384,10 +386,11 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
               <input
                 id="gen-photo-url"
                 type="url"
+                aria-label="Staff 2x2 ID picture web URL or data source"
                 value={photoUrl.startsWith('data:') ? '' : photoUrl}
                 onChange={(e) => setPhotoUrl(e.target.value)}
                 placeholder={photoUrl.startsWith('data:') ? 'Custom 2×2 image uploaded' : 'Or paste image URL (https://...)'}
-                className="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
+                className="flex-1 min-w-0 min-h-[44px] px-3 py-2 bg-slate-50 border border-slate-300 dark:bg-[#0d0f12] dark:border-[#222730] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors"
               />
             </div>
 
