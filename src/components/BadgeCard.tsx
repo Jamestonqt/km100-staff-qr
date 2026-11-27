@@ -40,26 +40,35 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
         boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)',
       }}
     >
-      {/* Top Lanyard Slot & Organization Branding Header */}
-      <div className="w-full pt-3 pb-2.5 px-4 bg-white border-b border-slate-100 flex flex-col items-center">
+      {/* Top Lanyard Slot & Organization Branding Header with TESDA Logo */}
+      <div className="w-full pt-3 pb-2.5 px-3 bg-white border-b border-slate-100 flex flex-col items-center">
         {/* Lanyard punch hole cutout simulation */}
         <div className="w-12 h-2 rounded-full bg-slate-200 border border-slate-300 mb-2 shadow-inner" />
 
-        <div className="w-full flex items-center justify-center space-x-2.5">
-          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+        <div className="w-full flex items-center justify-between px-1">
+          {/* Left: KM100 Logo */}
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs">
             <img
               src="/km100-logo.png"
               alt="KM100 Logo"
               className="w-full h-full object-contain rounded-full"
             />
           </div>
-          <div className="text-left">
-            <div className="text-sm font-black tracking-tight text-slate-900 leading-tight">
-              KM100
-            </div>
-            <div className="text-[8.5px] uppercase tracking-wider text-orange-600 font-black leading-none">
-              Skills &amp; Training Center, Inc.
-            </div>
+
+          {/* Center: 1-line Black Company Name */}
+          <div className="flex-1 mx-1.5 text-center">
+            <span className="text-[10px] font-black tracking-tight text-black uppercase leading-tight whitespace-nowrap block">
+              KM100 SKILLS &amp; TRAINING CENTER, INC.
+            </span>
+          </div>
+
+          {/* Right: Official TESDA Logo */}
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs">
+            <img
+              src="/tesda-logo.png"
+              alt="TESDA Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
         </div>
       </div>
@@ -68,10 +77,10 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
       <div className="h-1.5 w-full bg-orange-600" />
 
       {/* Main Body */}
-      <div className="flex-1 px-5 py-3.5 flex flex-col items-center justify-between text-center">
-        {/* 1x1 Square Photo with Crisp Ring */}
+      <div className="flex-1 px-5 pt-3.5 pb-4 flex flex-col items-center justify-between text-center">
+        {/* 1x1 Square Photo without Orange Border */}
         <div className="relative mt-0.5">
-          <div className="w-24 h-24 aspect-square rounded-xl p-1 bg-white border-2 border-orange-500 shadow-md flex items-center justify-center overflow-hidden">
+          <div className="w-24 h-24 aspect-square rounded-xl p-0.5 bg-white border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
             {employee.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -86,7 +95,7 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
                 }}
               />
             ) : (
-              <div className="w-full h-full rounded-lg bg-orange-50 flex items-center justify-center text-xl font-black text-orange-600 tracking-wider">
+              <div className="w-full h-full rounded-lg bg-slate-100 flex items-center justify-center text-xl font-black text-slate-700 tracking-wider">
                 {initials}
               </div>
             )}
@@ -140,11 +149,6 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
             </div>
           )}
         </div>
-      </div>
-
-      {/* Clean Minimalist Footer */}
-      <div className="w-full px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 font-mono">
-        <span>{employee.shift_schedule || 'Standard Shift (08:00 - 17:00)'}</span>
       </div>
     </div>
   );
