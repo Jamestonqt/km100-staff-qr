@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open Scanner Tab"
               className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'scanner'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
@@ -80,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open Issue Staff Badge Tab"
               className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'generator'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
@@ -93,7 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open Staff Directory Tab"
               className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'directory'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >
@@ -106,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open Attendance & Scan Logs Tab"
               className={`flex items-center space-x-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer whitespace-nowrap ${
                 activeTab === 'logs'
-                  ? 'bg-orange-600 text-white shadow-sm'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26]'
               }`}
             >

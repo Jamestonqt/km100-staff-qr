@@ -266,16 +266,16 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
 
       {/* Staff Table (tablet & desktop) */}
       <div className="hidden md:block bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl shadow-sm transition-colors overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100 border-b border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 font-bold transition-colors">
+            <thead className="sticky top-0 z-10 bg-slate-100/95 dark:bg-[#0d0f12]/95 backdrop-blur-md border-b border-slate-200 dark:border-[#222730] text-[11px] uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold transition-colors">
               <tr>
-                <th className="py-3 px-4">Faculty / Personnel</th>
-                <th className="py-3 px-4">Role &amp; Department</th>
-                <th className="py-3 px-4">Shift Schedule</th>
-                <th className="py-3 px-4 text-center">Site Status</th>
-                <th className="py-3 px-4 text-center">Account</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3.5 px-5">Faculty / Personnel</th>
+                <th className="py-3.5 px-5">Role &amp; Department</th>
+                <th className="py-3.5 px-5">Shift Schedule</th>
+                <th className="py-3.5 px-5 text-center">Site Status</th>
+                <th className="py-3.5 px-5 text-center">Account</th>
+                <th className="py-3.5 px-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-[#222730]/80 transition-colors">
@@ -285,9 +285,9 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
                 const isOnLeave = emp.status === 'On Leave';
 
                 return (
-                  <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-[#1a1e26] transition-colors">
+                  <tr key={emp.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1a1e26] transition-colors">
                     {/* Employee Profile */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-5">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-orange-500 bg-slate-100 dark:bg-[#0d0f12]">
                           {emp.photo_url ? (

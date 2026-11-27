@@ -71,11 +71,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-slate-50 dark:bg-[#0d0f12] text-slate-900 dark:text-white font-sans transition-colors selection:bg-orange-600 selection:text-white">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-slate-50 dark:bg-[#0d0f12] text-slate-900 dark:text-white font-sans transition-colors selection:bg-orange-600 selection:text-white relative overflow-hidden bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1e242f_1px,transparent_1px)] [background-size:24px_24px]">
+      {/* Top Ambient Light Depth */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[360px] bg-gradient-to-b from-orange-500/10 via-orange-500/5 to-transparent blur-3xl pointer-events-none" />
+
       {/* Top Bar with Branding & Theme Switcher */}
-      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-[#222730] bg-white dark:bg-[#16191e]">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-[#222730] bg-white dark:bg-[#16191e] shadow-sm">
             <img
               src="/km100-logo.png"
               alt="KM100 Skills & Training Center Emblem"
@@ -114,13 +117,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
       </header>
 
       {/* Main Login Card Section */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:px-6">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-8 sm:px-6">
         <div className="w-full max-w-md">
           {/* Card Frame */}
-          <div className="bg-white dark:bg-[#16191e] border border-slate-200 dark:border-[#222730] rounded-2xl shadow-xl p-6 sm:p-8 transition-colors">
+          <div className="bg-white/95 dark:bg-[#16191e]/95 border border-slate-200 dark:border-[#222730] rounded-2xl shadow-2xl shadow-orange-950/5 dark:shadow-black/60 p-6 sm:p-8 backdrop-blur-md transition-colors">
             {/* Header / Institutional Badge */}
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-2 bg-slate-50 dark:bg-[#0d0f12] border border-slate-200 dark:border-[#222730] mb-4 flex items-center justify-center shadow-inner">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-2 bg-slate-50 dark:bg-[#0d0f12] border-2 border-orange-500/30 dark:border-orange-500/40 mb-4 flex items-center justify-center shadow-md shadow-orange-500/10">
                 <img
                   src="/km100-logo.png"
                   alt="KM100 Logo"
@@ -185,7 +188,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@km100.edu.ph"
                     disabled={isSubmitting}
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-white dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:opacity-50"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-white dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -214,7 +217,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     disabled={isSubmitting}
-                    className="w-full pl-10 pr-11 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-white dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all disabled:opacity-50"
+                    className="w-full pl-10 pr-11 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-white dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all disabled:opacity-50"
                   />
                   <button
                     type="button"
@@ -236,7 +239,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[44px] py-3 px-4 rounded-xl font-bold text-sm text-white bg-orange-600 hover:bg-orange-500 active:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-500 transition-all flex items-center justify-center space-x-2 shadow-md hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full min-h-[44px] py-3 px-4 rounded-xl font-bold text-sm text-white bg-orange-600 hover:bg-orange-500 active:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-500 transition-all flex items-center justify-center space-x-2 shadow-md shadow-orange-600/25 hover:shadow-lg hover:shadow-orange-600/35 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
@@ -265,7 +268,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-4 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-[#222730]">
+      <footer className="relative z-10 w-full py-4 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-[#222730] bg-white/50 dark:bg-[#0d0f12]/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-1">
           <div>
             <span className="font-semibold text-slate-700 dark:text-slate-300">

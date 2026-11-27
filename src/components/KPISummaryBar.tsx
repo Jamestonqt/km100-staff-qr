@@ -23,7 +23,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Active Personnel
             </p>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 tabular-nums">
               {activePersonnel}
             </h3>
           </div>
@@ -43,7 +43,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Currently On-Site
             </p>
-            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
               {currentlyOnSite}
             </h3>
           </div>
@@ -64,7 +64,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Admissions Today
             </p>
-            <h3 className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1">
+            <h3 className="text-2xl font-black text-sky-600 dark:text-sky-400 mt-1 tabular-nums">
               {admissionsToday}
             </h3>
           </div>
@@ -84,7 +84,7 @@ export const KPISummaryBar: React.FC<KPISummaryBarProps> = ({
             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Denied / Flagged
             </p>
-            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">
+            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 tabular-nums">
               {deniedToday}
             </h3>
           </div>

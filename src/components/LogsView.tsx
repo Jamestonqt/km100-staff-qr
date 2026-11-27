@@ -326,15 +326,15 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
 
       {/* Logs Table (tablet & desktop) */}
       <div className="hidden md:block bg-white border border-slate-200 dark:bg-[#16191e] dark:border-[#222730] rounded-2xl shadow-sm transition-colors overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-100 border-b border-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 font-semibold transition-colors">
+            <thead className="sticky top-0 z-10 bg-slate-100/95 dark:bg-[#0d0f12]/95 backdrop-blur-md border-b border-slate-200 dark:border-[#222730] text-[11px] uppercase tracking-wider text-slate-700 dark:text-slate-300 font-bold transition-colors">
               <tr>
-                <th className="py-3.5 px-4">Timestamp</th>
-                <th className="py-3.5 px-4">Staff Member</th>
-                <th className="py-3.5 px-4">Department</th>
-                <th className="py-3.5 px-4 text-center">Type</th>
-                <th className="py-3.5 px-4 text-right">Verification</th>
+                <th className="py-3.5 px-5">Timestamp</th>
+                <th className="py-3.5 px-5">Staff Member</th>
+                <th className="py-3.5 px-5">Department</th>
+                <th className="py-3.5 px-5 text-center">Type</th>
+                <th className="py-3.5 px-5 text-right">Verification</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-[#222730] transition-colors">
@@ -343,9 +343,9 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                 const isDuplicate = log.verification_status === 'DUPLICATE_SCAN';
 
                 return (
-                  <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-[#1c2128] transition-colors">
+                  <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1c2128] transition-colors">
                     {/* Time */}
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    <td className="py-3.5 px-5 font-mono tabular-nums text-[11px] text-slate-600 dark:text-slate-300 whitespace-nowrap">
                       {new Date(log.scanned_at).toLocaleString([], {
                         month: 'short',
                         day: 'numeric',
@@ -356,25 +356,25 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                     </td>
 
                     {/* Staff */}
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-5">
                       <div className="font-bold text-slate-900 dark:text-white">{log.employee_name}</div>
-                      <div className="text-[11px] font-mono text-orange-600 dark:text-orange-400">
+                      <div className="text-[11px] font-mono font-bold text-orange-600 dark:text-orange-400">
                         {log.employee_code}
                       </div>
                     </td>
 
                     {/* Department */}
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                    <td className="py-3.5 px-5 text-slate-600 dark:text-slate-300">
                       {log.department || 'N/A'}
                     </td>
 
                     {/* Type */}
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-5 text-center">
                       <span
-                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border tracking-wider ${
                           log.scan_type === 'CHECK_IN'
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/70 dark:border-emerald-500/40 dark:text-emerald-400'
-                            : 'bg-blue-50 border-blue-300 text-blue-800 dark:bg-blue-950/70 dark:border-blue-500/40 dark:text-blue-400'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/70 dark:border-emerald-500/40 dark:text-emerald-300'
+                            : 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/70 dark:border-blue-500/40 dark:text-blue-300'
                         }`}
                       >
                         {log.scan_type === 'CHECK_IN' ? (
@@ -387,7 +387,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                     </td>
 
                     {/* Verification Status */}
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3.5 px-5 text-right">
                       <span
                         className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                           isValid
@@ -440,7 +440,7 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
                     {log.employee_code}
                   </div>
                 </div>
-                <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300 text-right shrink-0">
+                <div className="font-mono tabular-nums text-[11px] text-slate-600 dark:text-slate-300 text-right shrink-0">
                   {new Date(log.scanned_at).toLocaleString([], {
                     month: 'short',
                     day: 'numeric',
@@ -451,10 +451,10 @@ export const LogsView: React.FC<LogsViewProps> = ({ logs }) => {
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-wider ${
                     log.scan_type === 'CHECK_IN'
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/70 dark:border-emerald-500/40 dark:text-emerald-400'
-                      : 'bg-blue-50 border-blue-300 text-blue-800 dark:bg-blue-950/70 dark:border-blue-500/40 dark:text-blue-400'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/70 dark:border-emerald-500/40 dark:text-emerald-300'
+                      : 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/70 dark:border-blue-500/40 dark:text-blue-300'
                   }`}
                 >
                   {log.scan_type === 'CHECK_IN' ? (

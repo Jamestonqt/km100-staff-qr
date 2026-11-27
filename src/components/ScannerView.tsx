@@ -44,18 +44,18 @@ interface VerificationResult {
 
 type ScanResultStatus = VerificationStatus | 'ALREADY_ON_SITE' | 'NOT_ON_SITE';
 
-type BannerTone = 'green' | 'teal' | 'amber' | 'red';
+type BannerTone = 'green' | 'blue' | 'amber' | 'red';
 
 const BANNER_BG: Record<BannerTone, string> = {
-  green: 'bg-emerald-600 text-white',
-  teal: 'bg-teal-600 text-white',
-  amber: 'bg-amber-400 text-slate-950',
-  red: 'bg-rose-600 text-white',
+  green: 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/20',
+  blue: 'bg-blue-600 text-white shadow-lg shadow-blue-950/20',
+  amber: 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-950/20',
+  red: 'bg-rose-600 text-white shadow-lg shadow-rose-950/20',
 };
 
 const BANNER_BORDER: Record<BannerTone, string> = {
   green: 'border-emerald-500 dark:border-emerald-500/80',
-  teal: 'border-teal-500 dark:border-teal-500/80',
+  blue: 'border-blue-500 dark:border-blue-500/80',
   amber: 'border-amber-500 dark:border-amber-500/80',
   red: 'border-rose-500 dark:border-rose-500/80',
 };
@@ -72,7 +72,7 @@ function getBannerTitle(status: ScanResultStatus, scanType: ScanType): string {
 
 function getBannerTone(status: ScanResultStatus, scanType: ScanType): BannerTone {
   if (status === 'VALID') {
-    return scanType === 'CHECK_IN' ? 'green' : 'teal';
+    return scanType === 'CHECK_IN' ? 'green' : 'blue';
   }
   if (status === 'ALREADY_ON_SITE' || status === 'NOT_ON_SITE' || status === 'DUPLICATE_SCAN') {
     return 'amber';
@@ -1166,15 +1166,15 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
 
                     <div className="text-right shrink-0">
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black border ${
+                        className={`px-2 py-0.5 rounded text-[9px] font-black border tracking-wider ${
                           isLogin
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-500/30'
-                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-500/30'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-500/40'
+                            : 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-500/40'
                         }`}
                       >
                         {isLogin ? 'LOGIN' : 'LOGOUT'}
                       </span>
-                      <div className="text-[9px] text-slate-600 dark:text-slate-400 font-mono mt-0.5">
+                      <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono tabular-nums mt-0.5">
                         {new Date(log.scanned_at).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',

@@ -118,8 +118,8 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
           </div>
         </div>
 
-        {/* High-Resolution QR Code */}
-        <div className="my-2 p-2 bg-white rounded-xl shadow-md border border-slate-300 flex items-center justify-center">
+        {/* High-Resolution QR Code with Optical Quiet Zone */}
+        <div className="my-2 p-2.5 bg-white rounded-xl shadow-inner border border-slate-200 flex items-center justify-center">
           <QRCodeSVG
             value={qrValue}
             size={150}
