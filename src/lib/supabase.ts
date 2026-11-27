@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient, type Session, type User, type AuthChangeEvent } from '@supabase/supabase-js';
 import type { Employee, KPISummary, ScanLog } from '../types/database';
+import { getManilaTodayBounds, getLatestTodayValidLog } from '../utils/presence';
 
 export type { Session, User };
 
@@ -512,6 +513,47 @@ export const portalService = {
     const trimmedCode = code.trim().toUpperCase();
     const employees = await this.getEmployees();
     return employees.find((e) => e.employee_code.toUpperCase() === trimmedCode) || null;
+  },
+
+  async getLatestTodayLogForEmployee(
+    employeeId?: string | null,
+    employeeCode?: string | null
+  ): Promise<ScanLog | null> {
+    const { startOfDay, endOfDay } = getManilaTodayBounds();
+    const startIso = startOfDay.toISOString();
+    const endIso = endOfDay.toISOString();
+    const code = employeeCode?.trim().toUpperCase();
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        let query = supabase
+          .from('scan_logs')
+          .select('*')
+          .gte('scanned_at', startIso)
+          .lte('scanned_at', endIso)
+          .eq('verification_status', 'VALID')
+          .order('scanned_at', { ascending: false })
+          .limit(1);
+
+        if (employeeId && code) {
+          query = query.or(`employee_id.eq.${employeeId},employee_code.ilike.${code}`);
+        } else if (employeeId) {
+          query = query.eq('employee_id', employeeId);
+        } else if (code) {
+          query = query.ilike('employee_code', code);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        if (data && data.length > 0) return data[0] as ScanLog;
+        return null;
+      } catch (err) {
+        console.warn('Supabase getLatestTodayLogForEmployee failed, falling back to local store:', err);
+      }
+    }
+
+    const logs = await localStore.getScanLogs();
+    return getLatestTodayValidLog(logs, employeeId, code);
   },
 
   async getKPISummary(): Promise<KPISummary> {

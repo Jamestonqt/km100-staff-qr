@@ -27,6 +27,7 @@ import type {
 import { portalService } from '../lib/supabase';
 import { parseQRPayload, getInitials } from '../utils/qr';
 import { soundManager } from '../utils/audio';
+import { getLatestTodayValidLog } from '../utils/presence';
 
 interface ScannerViewProps {
   onScanRecorded: (log?: ScanLog) => void;
@@ -42,7 +43,13 @@ interface VerificationResult {
   scannedCode: string;
 }
 
-type ScanResultStatus = VerificationStatus | 'ALREADY_ON_SITE' | 'NOT_ON_SITE';
+type ScanResultStatus =
+  | VerificationStatus
+  | 'ALREADY_LOGGED_IN'
+  | 'NOT_LOGGED_IN'
+  | 'ALREADY_LOGGED_OUT'
+  | 'ALREADY_ON_SITE'
+  | 'NOT_ON_SITE';
 
 type BannerTone = 'green' | 'blue' | 'amber' | 'red';
 
@@ -64,8 +71,9 @@ function getBannerTitle(status: ScanResultStatus, scanType: ScanType): string {
   if (status === 'VALID') {
     return scanType === 'CHECK_IN' ? 'LOGIN RECORDED' : 'LOGOUT RECORDED';
   }
-  if (status === 'ALREADY_ON_SITE') return 'ALREADY LOGGED IN';
-  if (status === 'NOT_ON_SITE') return 'NOT LOGGED IN';
+  if (status === 'ALREADY_LOGGED_IN' || status === 'ALREADY_ON_SITE') return 'ALREADY LOGGED IN';
+  if (status === 'NOT_LOGGED_IN' || status === 'NOT_ON_SITE') return 'NOT LOGGED IN';
+  if (status === 'ALREADY_LOGGED_OUT') return 'ALREADY LOGGED OUT';
   if (status === 'DUPLICATE_SCAN') return 'PLEASE WAIT';
   return 'ACCESS DENIED';
 }
@@ -74,36 +82,20 @@ function getBannerTone(status: ScanResultStatus, scanType: ScanType): BannerTone
   if (status === 'VALID') {
     return scanType === 'CHECK_IN' ? 'green' : 'blue';
   }
-  if (status === 'ALREADY_ON_SITE' || status === 'NOT_ON_SITE' || status === 'DUPLICATE_SCAN') {
+  if (
+    status === 'ALREADY_LOGGED_IN' ||
+    status === 'ALREADY_LOGGED_OUT' ||
+    status === 'NOT_LOGGED_IN' ||
+    status === 'ALREADY_ON_SITE' ||
+    status === 'NOT_ON_SITE' ||
+    status === 'DUPLICATE_SCAN'
+  ) {
     return 'amber';
   }
   return 'red';
 }
 
-/**
- * Finds the original Time In for the current on-site session: the earliest
- * valid Time In that happened after the most recent Time Out. Duplicate
- * "already on-site" Time In scans are ignored so the real initial time is shown.
- */
-function getSessionCheckInTime(logs: ScanLog[], code: string): string | null {
-  const target = code.toUpperCase();
-  const relevant = logs
-    .filter(
-      (l) => l.verification_status === 'VALID' && l.employee_code.toUpperCase() === target
-    )
-    .sort((a, b) => new Date(a.scanned_at).getTime() - new Date(b.scanned_at).getTime());
-
-  let lastCheckOutIdx = -1;
-  for (let i = 0; i < relevant.length; i++) {
-    if (relevant[i].scan_type === 'CHECK_OUT') lastCheckOutIdx = i;
-  }
-  for (let i = lastCheckOutIdx + 1; i < relevant.length; i++) {
-    if (relevant[i].scan_type === 'CHECK_IN') {
-      return new Date(relevant[i].scanned_at).toLocaleTimeString();
-    }
-  }
-  return null;
-}
+const SCAN_COOLDOWN_MS = 4000;
 
 export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recentLogs }) => {
   // Scanner Controls
@@ -195,10 +187,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
       const now = Date.now();
       const formattedTime = new Date().toLocaleTimeString();
 
-      // Anti-Passback Cooldown Check (10 seconds)
-      const lastScannedTime = cooldownRef.current.get(codeToVerify);
-      if (lastScannedTime && now - lastScannedTime < 10000) {
-        const remainingSec = Math.ceil((10000 - (now - lastScannedTime)) / 1000);
+      // Anti-Passback Cooldown Check per Badge Code (3-5s lock, 4000ms)
+      const upperCode = codeToVerify.toUpperCase();
+      const lastScannedTime = cooldownRef.current.get(upperCode);
+      if (lastScannedTime && now - lastScannedTime < SCAN_COOLDOWN_MS) {
+        const remainingSec = Math.max(1, Math.ceil((SCAN_COOLDOWN_MS - (now - lastScannedTime)) / 1000));
         soundManager.playWarningBeep();
 
         setLastResult({
@@ -212,7 +205,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
-        }, 1200);
+        }, 1000);
         return;
       }
 
@@ -336,71 +329,124 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
         return;
       }
 
-      // Presence guard: prevent double counting when logging in twice or out twice
-      if (currentScanType === 'CHECK_IN' && employee.is_on_site === true) {
-        cooldownRef.current.set(employee.employee_code, now);
+      // Check Employee-level Cooldown (3-5s lock, 4000ms)
+      const lastScannedEmployee =
+        cooldownRef.current.get(employee.id) ||
+        cooldownRef.current.get(employee.employee_code.toUpperCase());
+
+      if (lastScannedEmployee && now - lastScannedEmployee < SCAN_COOLDOWN_MS) {
+        const remainingSec = Math.max(1, Math.ceil((SCAN_COOLDOWN_MS - (now - lastScannedEmployee)) / 1000));
         soundManager.playWarningBeep();
 
-        const newLog = await portalService.recordScanLog({
-          employee_id: employee.id,
-          employee_code: employee.employee_code,
-          employee_name: employee.full_name,
-          department: employee.department,
-          scan_type: currentScanType,
-          verification_status: 'VALID',
-        });
-
         setLastResult({
-          status: 'ALREADY_ON_SITE',
-          message: `${employee.full_name} is already logged in (${getSessionCheckInTime(recentLogsRef.current, employee.employee_code) ?? 'earlier today'}). Switch to Logout to sign out.`,
+          status: 'DUPLICATE_SCAN',
+          message: `${employee.full_name} (${employee.employee_code}) was just scanned. Please wait ${remainingSec}s before scanning again.`,
           scanType: currentScanType,
           timestamp: formattedTime,
           employee,
           scannedCode: employee.employee_code,
         });
 
-        onScanRecorded(newLog);
         setTimeout(() => {
           isProcessingScanRef.current = false;
           setIsVerifying(false);
-        }, 1600);
+        }, 1000);
         return;
       }
 
-      if (currentScanType === 'CHECK_OUT' && employee.is_on_site !== true) {
-        cooldownRef.current.set(employee.employee_code, now);
-        soundManager.playWarningBeep();
+      const updateCooldownForEmployee = () => {
+        const t = Date.now();
+        cooldownRef.current.set(upperCode, t);
+        cooldownRef.current.set(employee.employee_code.toUpperCase(), t);
+        cooldownRef.current.set(employee.id, t);
+      };
 
-        const newLog = await portalService.recordScanLog({
-          employee_id: employee.id,
-          employee_code: employee.employee_code,
-          employee_name: employee.full_name,
-          department: employee.department,
-          scan_type: currentScanType,
-          verification_status: 'VALID',
-        });
+      // Strict Alternating Attendance State Validation (Asia/Manila today)
+      const [dbLatestLog, inMemoryLatestLog] = await Promise.all([
+        portalService.getLatestTodayLogForEmployee(employee.id, employee.employee_code),
+        Promise.resolve(getLatestTodayValidLog(recentLogsRef.current, employee.id, employee.employee_code)),
+      ]);
 
-        setLastResult({
-          status: 'NOT_ON_SITE',
-          message: `${employee.full_name} is not currently logged in / on-site. Please scan Login first.`,
-          scanType: currentScanType,
-          timestamp: formattedTime,
-          employee,
-          scannedCode: employee.employee_code,
-        });
-
-        onScanRecorded(newLog);
-        setTimeout(() => {
-          isProcessingScanRef.current = false;
-          setIsVerifying(false);
-        }, 1600);
-        return;
+      let latestLogToday: ScanLog | null = null;
+      if (dbLatestLog && inMemoryLatestLog) {
+        latestLogToday =
+          new Date(dbLatestLog.scanned_at).getTime() >= new Date(inMemoryLatestLog.scanned_at).getTime()
+            ? dbLatestLog
+            : inMemoryLatestLog;
+      } else {
+        latestLogToday = dbLatestLog || inMemoryLatestLog;
       }
 
-      // VALID SCAN!
+      // Rule 1: When mode is LOGIN (Time In)
+      if (currentScanType === 'CHECK_IN') {
+        if (latestLogToday?.scan_type === 'CHECK_IN') {
+          updateCooldownForEmployee();
+          soundManager.playWarningBeep();
+
+          setLastResult({
+            status: 'ALREADY_LOGGED_IN',
+            message: `ALREADY LOGGED IN — ${employee.full_name} is already logged in. Please scan Logout instead.`,
+            scanType: currentScanType,
+            timestamp: formattedTime,
+            employee,
+            scannedCode: employee.employee_code,
+          });
+
+          setTimeout(() => {
+            isProcessingScanRef.current = false;
+            setIsVerifying(false);
+          }, 1500);
+          return;
+        }
+      }
+
+      // Rule 2: When mode is LOGOUT (Time Out)
+      if (currentScanType === 'CHECK_OUT') {
+        if (!latestLogToday) {
+          updateCooldownForEmployee();
+          soundManager.playWarningBeep();
+
+          setLastResult({
+            status: 'NOT_LOGGED_IN',
+            message: `NOT LOGGED IN — ${employee.full_name} hasn't logged in yet today. Please scan Login first.`,
+            scanType: currentScanType,
+            timestamp: formattedTime,
+            employee,
+            scannedCode: employee.employee_code,
+          });
+
+          setTimeout(() => {
+            isProcessingScanRef.current = false;
+            setIsVerifying(false);
+          }, 1500);
+          return;
+        }
+
+        if (latestLogToday.scan_type === 'CHECK_OUT') {
+          updateCooldownForEmployee();
+          soundManager.playWarningBeep();
+
+          setLastResult({
+            status: 'ALREADY_LOGGED_OUT',
+            message: `ALREADY LOGGED OUT — ${employee.full_name}, you have already logged out.`,
+            scanType: currentScanType,
+            timestamp: formattedTime,
+            employee,
+            scannedCode: employee.employee_code,
+          });
+
+          setTimeout(() => {
+            isProcessingScanRef.current = false;
+            setIsVerifying(false);
+          }, 1500);
+          return;
+        }
+      }
+
+      // VALID SCAN! Strict alternating state passes and cooldown is satisfied.
       const nextOnSite = currentScanType === 'CHECK_IN';
 
-      cooldownRef.current.set(employee.employee_code, now);
+      updateCooldownForEmployee();
       soundManager.playSuccessChime();
 
       if (currentScanType === 'CHECK_IN') {
@@ -1032,7 +1078,11 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
           >
             {/* Screen reader live announcement */}
             <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {lastResult ? `${bannerTitle}: ${lastResult.message}` : 'Scanner is on standby'}
+              {lastResult
+                ? lastResult.message.startsWith(`${bannerTitle} — `)
+                  ? lastResult.message
+                  : `${bannerTitle}: ${lastResult.message}`
+                : 'Scanner is on standby'}
             </div>
 
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#222730]">
@@ -1071,7 +1121,9 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onScanRecorded, recent
                       {bannerTitle}
                     </h2>
                     <p className={`text-xs font-semibold leading-tight mt-0.5 ${bannerTone === 'amber' ? 'text-slate-950 opacity-90' : 'text-white opacity-95'}`}>
-                      {lastResult.message}
+                      {lastResult.message.startsWith(`${bannerTitle} — `)
+                        ? lastResult.message.slice(bannerTitle.length + 3)
+                        : lastResult.message}
                     </p>
                   </div>
                 </div>
