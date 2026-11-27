@@ -75,9 +75,9 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
 
       {/* Main Body */}
       <div className="flex-1 px-5 pt-3 pb-4 flex flex-col items-center justify-between text-center">
-        {/* 2x2 Square Photo (No Orange Border, No Status Pill) */}
+        {/* 2x2 Square Photo (Simple Border, No Border Radius) */}
         <div className="relative mt-0.5">
-          <div className="w-32 h-32 aspect-square rounded-xl p-0.5 bg-white border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
+          <div className="w-32 h-32 aspect-square p-0.5 bg-white border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
             {employee.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -85,14 +85,14 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
                 width={128}
                 height={128}
                 loading="lazy"
-                className="w-full h-full rounded-lg object-cover bg-slate-100"
+                className="w-full h-full object-cover bg-slate-100"
                 crossOrigin="anonymous"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
             ) : (
-              <div className="w-full h-full rounded-lg bg-slate-100 flex items-center justify-center text-2xl font-black text-slate-700 tracking-wider">
+              <div className="w-full h-full bg-slate-100 flex items-center justify-center text-2xl font-black text-slate-700 tracking-wider">
                 {initials}
               </div>
             )}
