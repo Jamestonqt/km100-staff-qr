@@ -156,7 +156,7 @@ export const GeneratorView: React.FC<GeneratorViewProps> = ({
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
-        backgroundColor: '#020617',
+        backgroundColor: '#ffffff',
         logging: false,
       });
 

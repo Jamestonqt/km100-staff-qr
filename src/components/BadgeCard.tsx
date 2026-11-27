@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu } from 'lucide-react';
 import type { Employee } from '../types/database';
 import { createQRPayload, getInitials } from '../utils/qr';
 import { generateBrandedQrDataUrl } from '../utils/brandedQr';
@@ -36,40 +35,31 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
   return (
     <div
       id={id}
-      className={`relative w-[340px] h-[530px] rounded-2xl overflow-hidden bg-[#12151a] border-2 border-[#222730] shadow-2xl flex flex-col justify-between text-white font-sans ${className}`}
+      className={`relative w-[340px] h-[530px] rounded-2xl overflow-hidden bg-white border-2 border-slate-200 shadow-xl flex flex-col justify-between text-slate-900 font-sans ${className}`}
       style={{
-        boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08) inset',
+        boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)',
       }}
     >
       {/* Top Lanyard Slot & Organization Branding Header */}
-      <div className="w-full pt-3 pb-2 px-4 bg-[#0d0f12] border-b border-[#222730] flex flex-col items-center">
-        {/* Lanyard punch hole cut out simulation */}
-        <div className="w-12 h-2 rounded-full bg-[#181b22] border border-[#2e3542] mb-2 shadow-inner" />
+      <div className="w-full pt-3 pb-2.5 px-4 bg-white border-b border-slate-100 flex flex-col items-center">
+        {/* Lanyard punch hole cutout simulation */}
+        <div className="w-12 h-2 rounded-full bg-slate-200 border border-slate-300 mb-2 shadow-inner" />
 
-        <div className="w-full flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
-              <img
-                src="/km100-logo.png"
-                alt="KM100 Logo"
-                className="w-full h-full object-contain rounded-full"
-              />
-            </div>
-            <div className="text-left">
-              <div className="text-xs font-black tracking-tight text-white leading-tight">
-                KM100
-              </div>
-              <div className="text-[8px] uppercase tracking-wider text-orange-400 font-extrabold leading-none">
-                Skills &amp; Training Center
-              </div>
-            </div>
+        <div className="w-full flex items-center justify-center space-x-2.5">
+          <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center">
+            <img
+              src="/km100-logo.png"
+              alt="KM100 Logo"
+              className="w-full h-full object-contain rounded-full"
+            />
           </div>
-
-          <div className="flex items-center space-x-1">
-            <span className="flex items-center text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-[#1e232b] border border-[#2f3644] text-slate-300">
-              <Cpu className="w-2.5 h-2.5 mr-1 text-orange-400" />
-              ID-PASS
-            </span>
+          <div className="text-left">
+            <div className="text-sm font-black tracking-tight text-slate-900 leading-tight">
+              KM100
+            </div>
+            <div className="text-[8.5px] uppercase tracking-wider text-orange-600 font-black leading-none">
+              Skills &amp; Training Center, Inc.
+            </div>
           </div>
         </div>
       </div>
@@ -78,10 +68,10 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
       <div className="h-1.5 w-full bg-orange-600" />
 
       {/* Main Body */}
-      <div className="flex-1 px-5 py-3 flex flex-col items-center justify-between text-center">
-        {/* Photo / Avatar with High-Fidelity Badge Ring */}
-        <div className="relative mt-1">
-          <div className="w-24 h-24 rounded-full p-1 bg-[#1a1e26] border-2 border-orange-500 shadow-md">
+      <div className="flex-1 px-5 py-3.5 flex flex-col items-center justify-between text-center">
+        {/* 1x1 Square Photo with Crisp Ring */}
+        <div className="relative mt-0.5">
+          <div className="w-24 h-24 aspect-square rounded-xl p-1 bg-white border-2 border-orange-500 shadow-md flex items-center justify-center overflow-hidden">
             {employee.photo_url ? (
               <img
                 src={employee.photo_url}
@@ -89,14 +79,14 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
                 width={96}
                 height={96}
                 loading="lazy"
-                className="w-full h-full rounded-full object-cover bg-[#0d0f12]"
+                className="w-full h-full rounded-lg object-cover bg-slate-100"
                 crossOrigin="anonymous"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
             ) : (
-              <div className="w-full h-full rounded-full bg-[#161a22] flex items-center justify-center text-xl font-black text-orange-400 tracking-wider">
+              <div className="w-full h-full rounded-lg bg-orange-50 flex items-center justify-center text-xl font-black text-orange-600 tracking-wider">
                 {initials}
               </div>
             )}
@@ -104,12 +94,12 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
 
           {/* Account Status Badge */}
           <div
-            className={`absolute -bottom-1 left-1/2 transform -translate-x-1/2 px-2.5 py-0.5 rounded text-[9px] font-extrabold tracking-wider uppercase shadow-sm border ${
+            className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase shadow-sm border ${
               isInactive
-                ? 'bg-rose-600 text-white border-rose-400'
+                ? 'bg-rose-600 text-white border-rose-500'
                 : isOnLeave
-                ? 'bg-amber-600 text-white border-amber-400'
-                : 'bg-emerald-600 text-white border-emerald-400'
+                ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                : 'bg-emerald-600 text-white border-emerald-500'
             }`}
           >
             {employee.status}
@@ -117,67 +107,44 @@ export const BadgeCard: React.FC<BadgeCardProps> = ({ employee, id = 'cr80-badge
         </div>
 
         {/* Employee Details */}
-        <div className="mt-2 w-full">
-          <h2 className="text-base font-black text-white tracking-tight leading-tight line-clamp-1">
+        <div className="mt-2.5 w-full">
+          <h2 className="text-lg font-black text-slate-900 tracking-tight leading-tight line-clamp-1">
             {employee.full_name}
           </h2>
-          <p className="text-xs text-orange-300 font-semibold mt-0.5 line-clamp-1">
+          <p className="text-xs text-orange-600 font-bold mt-0.5 line-clamp-1 uppercase tracking-wide">
             {employee.role}
           </p>
-          <div className="mt-1.5 flex items-center justify-center gap-1.5 flex-wrap">
-            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#1a1e26] border border-[#2a303d] text-slate-300">
+          <div className="mt-2 flex items-center justify-center gap-1.5 flex-wrap">
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-700">
               {employee.department}
             </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-orange-950/60 border border-orange-500/40 text-orange-300 tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-mono font-black bg-orange-50 border border-orange-200 text-orange-700 tracking-wider">
               {employee.employee_code}
             </span>
           </div>
         </div>
 
-        {/* High-Resolution Branded QR Code with Optical Quiet Zone & KM100 Logo */}
-        <div className="my-2 p-2.5 bg-white rounded-xl shadow-inner border border-slate-200 flex items-center justify-center w-[170px] h-[170px]">
+        {/* High-Resolution Branded QR Code */}
+        <div className="my-1 p-2 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center w-[156px] h-[156px]">
           {qrDataUrl ? (
             <img
               src={qrDataUrl}
               alt={`KM100 QR Access Badge for ${employee.full_name}`}
-              width={150}
-              height={150}
-              className="w-[150px] h-[150px] object-contain rounded-lg"
+              width={140}
+              height={140}
+              className="w-[140px] h-[140px] object-contain rounded-lg"
             />
           ) : (
-            <div className="w-[150px] h-[150px] bg-slate-50 flex items-center justify-center rounded-lg">
+            <div className="w-[140px] h-[140px] bg-slate-50 flex items-center justify-center rounded-lg">
               <span className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
         </div>
-
-        <div className="text-[9px] text-slate-400 font-mono tracking-tight leading-tight">
-          OFFICIAL KM100 FACULTY &amp; STAFF CREDENTIAL
-        </div>
       </div>
 
-      {/* Footer / Shift Schedule & Official Barcode */}
-      <div className="w-full px-4 py-2 bg-[#0d0f12] border-t border-[#222730] flex items-center justify-between text-[9px] text-slate-400 font-mono">
-        <div className="text-left">
-          <div className="text-slate-200 font-bold">{employee.shift_schedule}</div>
-          <div className="text-[8px] text-slate-500 uppercase">
-            PROPERTY OF KM100 SKILLS &amp; TRAINING CENTER, INC.
-          </div>
-        </div>
-
-        {/* Official Barcode Strip */}
-        <div className="flex items-end space-x-[2px] h-4.5 opacity-80 shrink-0">
-          <div className="w-1 h-full bg-slate-300" />
-          <div className="w-[1px] h-full bg-slate-300" />
-          <div className="w-1.5 h-full bg-slate-300" />
-          <div className="w-[2px] h-full bg-slate-300" />
-          <div className="w-1 h-full bg-slate-300" />
-          <div className="w-[1px] h-full bg-slate-300" />
-          <div className="w-2 h-full bg-slate-300" />
-          <div className="w-1 h-full bg-slate-300" />
-          <div className="w-[2px] h-full bg-slate-300" />
-          <div className="w-1 h-full bg-slate-300" />
-        </div>
+      {/* Clean Minimalist Footer */}
+      <div className="w-full px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 font-mono">
+        <span>{employee.shift_schedule || 'Standard Shift (08:00 - 17:00)'}</span>
       </div>
     </div>
   );

@@ -185,7 +185,7 @@ export const DirectoryView: React.FC<DirectoryViewProps> = ({
       const canvas = await html2canvas(badgeEl, {
         scale: 3,
         useCORS: true,
-        backgroundColor: '#020617',
+        backgroundColor: '#ffffff',
       });
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
