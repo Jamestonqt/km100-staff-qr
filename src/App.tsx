@@ -6,11 +6,19 @@ import { GeneratorView } from './components/GeneratorView';
 import { DirectoryView } from './components/DirectoryView';
 import { LogsView } from './components/LogsView';
 import { SetupModal } from './components/SetupModal';
+import { LoginView } from './components/LoginView';
 import type { Employee, ScanLog } from './types/database';
-import { portalService, isSupabaseConfigured } from './lib/supabase';
+import {
+  portalService,
+  isSupabaseConfigured,
+  supabase,
+  authService,
+  type Session,
+} from './lib/supabase';
 import { soundManager } from './utils/audio';
 import { getInitialTheme, applyTheme, type Theme } from './utils/theme';
 import { getCurrentlyOnSiteCount } from './utils/presence';
+import { Loader2 } from 'lucide-react';
 
 function computeAdmissionsSummary(logs: ScanLog[]) {
   const d = new Date();
@@ -28,6 +36,8 @@ function computeAdmissionsSummary(logs: ScanLog[]) {
 
 export function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>('scanner');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [logs, setLogs] = useState<ScanLog[]>([]);
@@ -53,8 +63,70 @@ export function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Load all data
+  // Check initial authentication session & subscribe to auth state changes
   useEffect(() => {
+    let isMounted = true;
+
+    const checkInitialSession = async () => {
+      try {
+        if (isSupabaseConfigured && supabase) {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) console.error('Error fetching Supabase auth session:', error);
+          if (isMounted) setSession(data.session);
+        } else {
+          const { data } = await authService.getSession();
+          if (isMounted) setSession(data.session);
+        }
+      } catch (err) {
+        console.error('Failed to get auth session:', err);
+      } finally {
+        if (isMounted) setIsAuthChecking(false);
+      }
+    };
+
+    checkInitialSession();
+
+    let unsubscribe = () => {};
+    if (isSupabaseConfigured && supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, currentSession) => {
+          if (isMounted) setSession(currentSession);
+        }
+      );
+      unsubscribe = () => subscription.unsubscribe();
+    } else {
+      const { data: { subscription } } = authService.onAuthStateChange(
+        (_event, currentSession) => {
+          if (isMounted) setSession(currentSession);
+        }
+      );
+      unsubscribe = () => subscription.unsubscribe();
+    }
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const reloadData = useCallback(async () => {
+    if (!session) return;
+    try {
+      const [empList, logList] = await Promise.all([
+        portalService.getEmployees(),
+        portalService.getScanLogs(),
+      ]);
+      setEmployees(empList);
+      setLogs(logList);
+    } catch (err) {
+      console.error('Failed to reload portal data:', err);
+    }
+  }, [session]);
+
+  // Load all personnel and scan data only once authenticated
+  useEffect(() => {
+    if (!session) return;
+
     let isMounted = true;
     const fetchData = async () => {
       try {
@@ -74,30 +146,18 @@ export function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [session]);
 
-  const reloadData = useCallback(async () => {
-    try {
-      const [empList, logList] = await Promise.all([
-        portalService.getEmployees(),
-        portalService.getScanLogs(),
-      ]);
-      setEmployees(empList);
-      setLogs(logList);
-    } catch (err) {
-      console.error('Failed to reload portal data:', err);
-    }
-  }, []);
-
-  // Keep the live feed and on-site count in sync with Supabase Realtime
+  // Keep live feed and on-site count in sync with Supabase Realtime when authenticated
   useEffect(() => {
+    if (!session) return;
     const unsubscribeEmployees = portalService.subscribeToEmployees(reloadData);
     const unsubscribeLogs = portalService.subscribeToScanLogs(reloadData);
     return () => {
       unsubscribeEmployees();
       unsubscribeLogs();
     };
-  }, [reloadData]);
+  }, [session, reloadData]);
 
   // Audio mute toggle
   const handleToggleMute = () => {
@@ -117,9 +177,55 @@ export function App() {
     reloadData();
   };
 
+  const handleSignOut = async () => {
+    try {
+      await authService.signOut();
+      setSession(null);
+      setEmployees([]);
+      setLogs([]);
+    } catch (err) {
+      console.error('Failed to sign out:', err);
+    }
+  };
+
+  // 1. Initial Auth Verification Splash
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0d0f12] text-slate-900 dark:text-white font-sans p-4 transition-colors">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#222730] p-2 bg-white dark:bg-[#16191e] shadow-md animate-pulse flex items-center justify-center">
+            <img
+              src="/km100-logo.png"
+              alt="KM100 Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="flex items-center space-x-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
+            <Loader2 className="w-4 h-4 animate-spin text-orange-600 dark:text-orange-400" />
+            <span>Verifying KM100 Admin Session...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated: Render Admin Login Only (Hide Navbars, Scanner, Personnel Data)
+  if (!session) {
+    return (
+      <LoginView
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        onLoginSuccess={(newSession) => {
+          setSession(newSession);
+        }}
+      />
+    );
+  }
+
+  // 3. Authenticated Admin Session: Full Application
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0d0f12] dark:text-white flex flex-col font-sans selection:bg-orange-600 selection:text-white transition-colors">
-      {/* Top Navbar */}
+      {/* Top Navbar with Sign Out */}
       <Navbar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -129,6 +235,8 @@ export function App() {
         onToggleMute={handleToggleMute}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        onSignOut={handleSignOut}
+        userEmail={session.user.email}
       />
 
       {/* Main Content Area */}

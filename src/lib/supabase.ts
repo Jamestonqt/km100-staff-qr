@@ -1,5 +1,7 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient, type Session, type User, type AuthChangeEvent } from '@supabase/supabase-js';
 import type { Employee, KPISummary, ScanLog } from '../types/database';
+
+export type { Session, User };
 
 const rawUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 // Normalize URL: fix accidental leading 'hh', strip trailing /rest/v1/ or slashes
@@ -21,6 +23,98 @@ export const isSupabaseConfigured: boolean = Boolean(
 export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+const DEMO_AUTH_KEY = 'km100_demo_auth_session';
+
+export const authService = {
+  async getSession(): Promise<{ data: { session: Session | null }; error: Error | null }> {
+    if (isSupabaseConfigured && supabase) {
+      return await supabase.auth.getSession();
+    }
+    try {
+      const stored = localStorage.getItem(DEMO_AUTH_KEY);
+      if (stored) {
+        return { data: { session: JSON.parse(stored) as Session }, error: null };
+      }
+    } catch {
+      localStorage.removeItem(DEMO_AUTH_KEY);
+    }
+    return { data: { session: null }, error: null };
+  },
+
+  onAuthStateChange(
+    callback: (event: AuthChangeEvent, session: Session | null) => void
+  ): { data: { subscription: { unsubscribe: () => void } } } {
+    if (isSupabaseConfigured && supabase) {
+      return supabase.auth.onAuthStateChange(callback);
+    }
+    const handler = (e: StorageEvent) => {
+      if (e.key === DEMO_AUTH_KEY) {
+        const nextSession = e.newValue ? (JSON.parse(e.newValue) as Session) : null;
+        callback(nextSession ? 'SIGNED_IN' : 'SIGNED_OUT', nextSession);
+      }
+    };
+    window.addEventListener('storage', handler);
+    return {
+      data: {
+        subscription: {
+          unsubscribe: () => window.removeEventListener('storage', handler),
+        },
+      },
+    };
+  },
+
+  async signInWithPassword(credentials: {
+    email: string;
+    password: string;
+  }): Promise<{ data: { session: Session | null; user: User | null }; error: Error | null }> {
+    if (isSupabaseConfigured && supabase) {
+      const res = await supabase.auth.signInWithPassword(credentials);
+      return {
+        data: { session: res.data.session, user: res.data.user },
+        error: res.error,
+      };
+    }
+
+    const email = credentials.email.trim();
+    const password = credentials.password;
+    if (!email || !password) {
+      return {
+        data: { session: null, user: null },
+        error: new Error('Please enter both administrative email and password.'),
+      };
+    }
+
+    const demoSession = {
+      access_token: 'demo_km100_token_' + Date.now(),
+      token_type: 'bearer',
+      expires_in: 86400,
+      user: {
+        id: 'km100-admin-demo-user',
+        email,
+        role: 'authenticated',
+        aud: 'authenticated',
+        app_metadata: { provider: 'email' },
+        user_metadata: { role: 'admin', full_name: 'KM100 Administrator' },
+        created_at: new Date().toISOString(),
+      },
+    } as unknown as Session;
+
+    localStorage.setItem(DEMO_AUTH_KEY, JSON.stringify(demoSession));
+    window.dispatchEvent(new StorageEvent('storage', { key: DEMO_AUTH_KEY, newValue: JSON.stringify(demoSession) }));
+    return { data: { session: demoSession, user: demoSession.user }, error: null };
+  },
+
+  async signOut(): Promise<{ error: Error | null }> {
+    if (isSupabaseConfigured && supabase) {
+      const res = await supabase.auth.signOut();
+      return { error: res.error };
+    }
+    localStorage.removeItem(DEMO_AUTH_KEY);
+    window.dispatchEvent(new StorageEvent('storage', { key: DEMO_AUTH_KEY, newValue: null }));
+    return { error: null };
+  },
+};
 
 // Initial pre-seeded mock employees (matching supabase/schema.sql)
 const SEED_EMPLOYEES: Employee[] = [

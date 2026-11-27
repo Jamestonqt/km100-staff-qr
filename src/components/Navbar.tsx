@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Sun,
   Moon,
+  LogOut,
 } from 'lucide-react';
 import type { Theme } from '../utils/theme';
 
@@ -25,6 +26,8 @@ interface NavbarProps {
   onToggleMute: () => void;
   theme: Theme;
   onToggleTheme: () => void;
+  onSignOut: () => void;
+  userEmail?: string | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -36,6 +39,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleMute,
   theme,
   onToggleTheme,
+  onSignOut,
+  userEmail,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 dark:border-[#222730] dark:bg-[#12151a]/95 backdrop-blur-md transition-colors">
@@ -166,6 +171,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="min-h-[44px] min-w-[44px] p-2.5 rounded-lg bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200 dark:bg-[#0d0f12] dark:border-[#222730] dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#1a1e26] transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 cursor-pointer"
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-rose-500 dark:text-rose-400" /> : <Volume2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
+            </button>
+
+            {/* Admin Sign Out */}
+            <button
+              onClick={onSignOut}
+              title={userEmail ? `Signed in as ${userEmail} • Click to Sign Out` : 'Sign Out of KM100 Admin Access'}
+              aria-label="Sign Out of KM100 Admin Access"
+              className="min-h-[44px] px-2.5 sm:px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300 dark:hover:bg-rose-950/70 transition-colors flex items-center space-x-1.5 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 cursor-pointer shadow-sm"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span className="hidden sm:inline">Sign Out</span>
             </button>
           </div>
         </div>
